@@ -1,0 +1,72 @@
+---
+title: "Pollination exercises"
+author: "Haley Carter"
+date: "2023-07-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)
+```
+
+
+In the github repository for this workshop there is a .csv file with pollinator observation data. Read this in to RStudio using read_csv() and check out the column names and data using the code chunk below.
+
+```{r}
+pollination <- read_csv("/Users/haley/Documents/GitHub/R-intro-tidyverse-2023/pollination.csv")
+names(pollination)
+#View(pollination)
+```
+
+# Subset the data
+
+We're only interested in data from the David's Canyon population, and we don't need all of the variables. We only want "Time", "Date", "Observer", "Temp..begin.", "Bee", "FlowObs", "ObsevTime", "HM", "HMrate", and "Brate". 
+
+We also want the names of the columns to be more meaningful. Select the data we want and rename "Time" to "time", "Date" to "date", "Observer" to "observer", "Temp..begin." to "temp", "FlowObs" to "n_flowers", "Bee" to "n_bees", "HM" to "n_hawkmoths", and "ObsevTime" to "minutes_observed". 
+
+Save the data we want with the new names as a new object called dc_data (for David's Canyon data).
+
+```{r}
+dc_data <- pollination %>% 
+  filter(PopName == "David's Canyon") %>% 
+  select(time=Time,
+         date=Date,
+         observer = Observer,
+         temp = Temp..begin.,
+         n_bees=Bee,
+         n_flowers=FlowObs,
+         minutes_observed=ObsevTime,
+         n_hawkmoths=HM,
+         HMrate,
+         Brate)
+```
+
+## Who saw the most hawkmoths? The most bees? Watched the most flowers?
+
+Note: We don't want to know about the cameras, only the people so use filter(!str_detect(observer, "CAM")) to filter out observers with CAM in their name.
+
+```{r}
+dc_data %>% 
+  filter(!str_detect(observer, "CAM")) %>% 
+  group_by(observer) %>% 
+  summarise(moths = sum(n_hawkmoths),
+            bees = sum(n_bees),
+            flowers = sum(n_flowers))
+```
+## How often were there more hawkmoths than bees at an individual plant? How often were there more bees than hawkmoths?
+
+```{r}
+dc_data %>% 
+  mutate(bees_minus_moths = n_bees - n_hawkmoths) %>% 
+  mutate(most_common_pollinator = case_when(
+    bees_minus_moths > 0 ~ "bee",
+    bees_minus_moths < 0 ~ "hawkmoth",
+    bees_minus_moths == 0 ~ "both")) %>% 
+  group_by(most_common_pollinator) %>% 
+  summarise(how_many_plants = n())
+```
+## 
