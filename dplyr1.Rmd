@@ -153,7 +153,7 @@ police_new <-
 
 We saved the same data with a different name for one column, while keep all other and their original order. But we can also save only a few variables. For convenience, we  name `police_short` our new object.
 
-```{r, eval=TRUE}
+```{r, eval=F}
 police_short <- select(police, raw_row_number, date, time)
 ```
 
@@ -184,21 +184,21 @@ Hint:
 
 We can also select by matching patterns in the names of the columns.  The patterns to match are in quotes because they aren't column names -- just character data.
 
-```{r, eval=TRUE}
+```{r, eval=F}
 police %>% select(starts_with("contraband"))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=F}
 police %>% select(ends_with("issued"))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=F}
 police %>% select(contains("vehicle"))
 ```
 
 We can also put a `-` in front of these helper functions to exclude columns:
 
-```{r, eval=TRUE}
+```{r, eval=F}
 police %>% select(-contains("subject"))
 ```
 
@@ -227,57 +227,66 @@ analysis_vars <- c("search_basis", "reason_for_stop")
 
 Perhaps we built this vector programatically (we wrote code to determine the values, instead of typing them ourselves), so we can't just rewrite it to: 
 
-```{r, eval=TRUE}
-select(police, search_basis, reason_for_stop)
+```{r, eval=F}
+police %>% select(search_basis, reason_for_stop)
 ```
 
 If we just give the vector to `select`, it looks like we expect "analysis_vars" to be a column name in police.  We get a warning:
 
 ```{r}
-select(police, analysis_vars)
+police %>% select(analysis_vars)
 ```
 
 This warning tells us what we should do instead, which is use `all_of`:
 
-```{r, , eval=TRUE}
-select(police, all_of(analysis_vars))
+```{r, eval=F}
+police %>% select(all_of(analysis_vars))
 ```
 
 This makes it clearer that "analysis_vars" isn't the name of a column in police.
 
 What if we want to select columns of a certain type -- for example, only the numeric columns?  
 
-```{r, eval=TRUE}
-select(police, where(is.numeric))
+```{r, eval=F}
+police %>% select(where(is.numeric))
 ```
 
 `is.numeric` is the name of a function.  We just use the name without `()`.  This function is applied to each column, and if it returns TRUE, then the column is selected.  Like above with using a vector, we wrap the function we want to use in `where` to make it clear that we're using a function, not looking for a column named "is.numeric").  
 
 `where` can be used with any function that returns a *single* TRUE or FALSE value for each column.  
 
+## Exercise 
+
+Select only columns with character data that contain 'raw' in their name.
+
+```{r}
+
+```
+
 
 # Filter: Choose Rows
 
 The `filter()` function lets us choose which rows of data to keep by writing expressions that return TRUE or FALSE for every row in the data frame.  Recall from last session:
 
-```{r, eval=TRUE}
+```{r, eval=F}
+police %>%  filter(date == "2017-01-02")
 filter(police, date == "2017-01-02")
 ```
 
 We can do complex conditions as we could do with `[]`
 
-```{r, eval=TRUE}
-filter(police, subject_race == "hispanic" & subject_sex == "female")
+```{r, eval=F}
+police %>% filter(subject_race == "hispanic" & subject_sex == "female")
 ```
 
 If we include multiple comma-separated conditions, they are joined with `&` (and).  So this following is equivalent to the above.
 
-```{r, eval=TRUE}
-filter(police, subject_race == "hispanic", subject_sex == "female")
+```{r, eval=F}
+police %>% filter(subject_race == "hispanic", subject_sex == "female")
 ```
 
 
-### EXERCISE 5
+### EXERCISES
 
 1. Filter `police` to choose the rows where location is 60201 or 60202
 2. Filter `police` to choose the rows where location is 60201 or 60202, and subject_sex is "male"
@@ -302,18 +311,18 @@ mtcars
 
 Now, let's filter to see which cars have above average mpg:
 
-```{r, eval=TRUE}
-filter(mtcars, mpg > mean(mpg))
+```{r, eval=F}
+mtcars %>% filter(mpg > mean(mpg))
 ```
 
 Or which car has the most horsepower (hp):
 
-```{r,  eval=TRUE}
-filter(mtcars, hp == max(hp))
+```{r,  eval=F}
+mtcars %>% filter(hp == max(hp))
 ```
 
 
-### EXERCISE 6
+### EXERCISE
 
 Using `mtcars`, find the car with the minimum (`min`) displacement (disp) value:
 
@@ -327,6 +336,7 @@ Using `mtcars`, find the car with the minimum (`min`) displacement (disp) value:
 Last session, we saw `slice()` briefly as a way to choose which rows we want by their integer index value.  But, there are some useful variants on the `slice` function that help us select rows that have the maximum or minimum value of a particular variable:
 
 ```{r, eval=TRUE}
+mtcars %>% slice_max(hp)
 slice_max(mtcars, hp)
 ```
 
@@ -353,7 +363,7 @@ Like we did with `slice_max`, can also specify the `n` argument.
 We name the column we're mutating and set the value.  If the name already exists, it will update the column. If the name doesn't exist, it will create a new variable (column is appended at the end of existing columns).  
 
 ```{r, eval=TRUE}
-mutate(police, vehicle_age = 2017 - vehicle_year) %>%
+police %>% mutate(vehicle_age = 2017 - vehicle_year) %>%
   select(starts_with("vehicle"))  # just to pick a few columns to look at
 ```
 
@@ -401,13 +411,13 @@ Remember that when using `mutate()`, you're operating on the entire column at on
 `na_if` replaces an existing value with `NA`.  `replace_na` does roughly the opposite: replaces `NA` with a new value.
 
 ```{r}
-mutate(police, vehicle_make = na_if(vehicle_make, "UNK"))
+police %>% mutate(vehicle_make = na_if(vehicle_make, "UNK"))
 ```
 
 `na_if()` can only can check and replace one value at a time; it also can't be used with any expressions (`x <= 1`) -- only single values.
 
 
-### EXERCISE 7
+### EXERCISE
 
 If the column beat in `police` is "/" or "CHICAGO", set it to `NA` instead using `mutate()`.  
 
