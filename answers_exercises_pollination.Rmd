@@ -82,20 +82,23 @@ dc_data %>%
 ```
 ## Exercise 4 
 
-In 2009, in which population did researchers spend the most observation time?
+In 2009, in which population did researchers spend the most observation time? How much time did researchers spend per observation in each population?
+
+Note: The names of the columns are different between firstyear_data and dc_data.
 
 ```{r}
 firstyear_data %>% 
+  group_by(PopName) %>% 
+  summarize(observation_time = sum(ObsevTime),
+            time_per_obs = sum(ObsevTime)/n())
   
 ```
 
-
-
 # Summarizing values calculated from the data
 
-## Exercise 
+## Exercise 5
 
-We want to know if bees or hawkmoths are more common visitors to these flowers. How often were there more hawkmoths than bees at an individual plants in DC? How often were there more bees than hawkmoths?
+We want to know if bees or hawkmoths are more common visitors to these flowers. In DC, how often were there more hawkmoths than bees at an individual plants? How often were there more bees than hawkmoths?
 
 ```{r}
 dc_data %>% 
@@ -108,4 +111,3 @@ dc_data %>%
   summarise(how_many_plants = n())
 ```
 
-## 
