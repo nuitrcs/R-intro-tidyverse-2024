@@ -22,13 +22,29 @@ names(pollination)
 #View(pollination)
 ```
 
-# Subset the data
+# What's in the data
 
-We're only interested in data from the David's Canyon population, and we don't need all of the variables. We only want "Time", "Date", "Observer", "Temp..begin.", "Bee", "FlowObs", "ObsevTime", "HM", "HMrate", and "Brate". 
+Each row of these data is a observation that came from a person, or a camera, (Observer) sat in front of a Oenothera harringtonii plant for a certain amount of minutes (ObsevTime), recording all visitors to the flowers in order to learn about the pollination of the plant species. Most visitors to these flowers are bees (Bees) and hawkmoths (Hawkmoth) of different genera (Hyles, Manduca). Some plants have more flowers than others, so the number of flowers was also recorded (FlowObs). These observations were made at multiple populations (PopName), over multiple dates (Date). 
+
+# Subsetting and changing column names
+
+## Exercise 1
+
+We're interested in the work that went on in 2009. Subset the data from 2009 and save it as an object called firstyear_data (as this was the first year of the research effort).
+
+```{r}
+firstyear_data <- pollination %>% 
+  filter(Year == 2009)
+```
+
+## Exercise 2
+
+We're also particularly interested in data from the David's Canyon population, but we don't need all of the variables. We only want "Time", "Date", "Observer", "Temp..begin.", "Bee", "FlowObs", "ObsevTime", "HM", "HMrate", and "Brate". 
 
 We also want the names of the columns to be more meaningful. Select the data we want and rename "Time" to "time", "Date" to "date", "Observer" to "observer", "Temp..begin." to "temp", "FlowObs" to "n_flowers", "Bee" to "n_bees", "HM" to "n_hawkmoths", and "ObsevTime" to "minutes_observed". 
 
-Save the data we want with the new names as a new object called dc_data (for David's Canyon data).
+
+Save the data we want, as described above, in the R environment with the new names as a new object called dc_data (for David's Canyon data).
 
 ```{r}
 dc_data <- pollination %>% 
@@ -45,7 +61,13 @@ dc_data <- pollination %>%
          Brate)
 ```
 
-## Who saw the most hawkmoths? The most bees? Watched the most flowers?
+# Creating data summaries
+
+## Exercise 3
+
+In the David's Canyon population, who saw the most hawkmoths? The most bees? Watched the most flowers? Accumulated the most observation minutes?
+
+You could query the data for each of these questions one-by-one but could also calculate all of the answers at once, and create a summary table by grouping by observer. 
 
 Note: We don't want to know about the cameras, only the people so use filter(!str_detect(observer, "CAM")) to filter out observers with CAM in their name.
 
@@ -55,9 +77,25 @@ dc_data %>%
   group_by(observer) %>% 
   summarise(moths = sum(n_hawkmoths),
             bees = sum(n_bees),
-            flowers = sum(n_flowers))
+            flowers = sum(n_flowers),
+            observationTime = sum(minutes_observed))
 ```
-## How often were there more hawkmoths than bees at an individual plant? How often were there more bees than hawkmoths?
+## Exercise 4 
+
+In 2009, in which population did researchers spend the most observation time?
+
+```{r}
+firstyear_data %>% 
+  
+```
+
+
+
+# Summarizing values calculated from the data
+
+## Exercise 
+
+We want to know if bees or hawkmoths are more common visitors to these flowers. How often were there more hawkmoths than bees at an individual plants in DC? How often were there more bees than hawkmoths?
 
 ```{r}
 dc_data %>% 
@@ -69,4 +107,5 @@ dc_data %>%
   group_by(most_common_pollinator) %>% 
   summarise(how_many_plants = n())
 ```
+
 ## 
