@@ -1,7 +1,7 @@
 ---
-title: "Answers to pollination exercises"
+title: "Pollination exercises"
 author: "Haley Carter"
-date: "2023-07-10"
+date: "2023-07-11"
 output: html_document
 ---
 
@@ -14,6 +14,7 @@ library(tidyverse)
 ```
 
 
+
 In the github repository for this workshop there is a .csv file with pollinator observation data. Read this in to RStudio using read_csv() and check out the column names and data using the code chunk below.
 
 ```{r}
@@ -21,6 +22,7 @@ pollination <- read_csv("/Users/haley/Documents/GitHub/R-intro-tidyverse-2023/po
 names(pollination)
 #View(pollination)
 ```
+
 
 # What's in the data
 
@@ -33,8 +35,7 @@ Each row of these data is a observation that came from a person, or a camera, (O
 We're interested in the work that went on in 2009. Subset the data from 2009 and save it as an object called firstyear_data (as this was the first year of the research effort).
 
 ```{r}
-firstyear_data <- pollination %>% 
-  filter(Year == 2009)
+
 ```
 
 ## Exercise 2
@@ -47,18 +48,7 @@ We also want the names of the columns to be more meaningful. Select the data we 
 Save the data we want, as described above, in the R environment with the new names as a new object called dc_data (for David's Canyon data).
 
 ```{r}
-dc_data <- pollination %>% 
-  filter(PopName == "David's Canyon") %>% 
-  select(time=Time,
-         date=Date,
-         observer = Observer,
-         temp = Temp..begin.,
-         n_bees=Bee,
-         n_flowers=FlowObs,
-         minutes_observed=ObsevTime,
-         n_hawkmoths=HM,
-         HMrate,
-         Brate)
+
 ```
 
 # Creating data summaries
@@ -72,14 +62,9 @@ You could query the data for each of these questions one-by-one but could also c
 Note: We don't want to know about the cameras, only the people so use filter(!str_detect(observer, "CAM")) to filter out observers with CAM in their name.
 
 ```{r}
-dc_data %>% 
-  filter(!str_detect(observer, "CAM")) %>% 
-  group_by(observer) %>% 
-  summarise(moths = sum(n_hawkmoths),
-            bees = sum(n_bees),
-            flowers = sum(n_flowers),
-            observationTime = sum(minutes_observed))
+
 ```
+
 ## Exercise 4 
 
 In 2009, in which population did researchers spend the most observation time? How much time did researchers spend per observation in each population?
@@ -87,10 +72,7 @@ In 2009, in which population did researchers spend the most observation time? Ho
 Note: The names of the columns are different between firstyear_data and dc_data.
 
 ```{r}
-firstyear_data %>% 
-  group_by(PopName) %>% 
-  summarize(observation_time = sum(ObsevTime),
-            time_per_obs = sum(ObsevTime)/n())
+
   
 ```
 
@@ -101,13 +83,6 @@ firstyear_data %>%
 We want to know if bees or hawkmoths are more common visitors to these flowers. In DC, how often were there more hawkmoths than bees at an individual plants? How often were there more bees than hawkmoths?
 
 ```{r}
-dc_data %>% 
-  mutate(bees_minus_moths = n_bees - n_hawkmoths) %>% 
-  mutate(most_common_pollinator = case_when(
-    bees_minus_moths > 0 ~ "bee",
-    bees_minus_moths < 0 ~ "hawkmoth",
-    bees_minus_moths == 0 ~ "both")) %>% 
-  group_by(most_common_pollinator) %>% 
-  summarise(how_many_plants = n())
+
 ```
 

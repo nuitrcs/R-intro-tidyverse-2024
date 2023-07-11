@@ -11,9 +11,9 @@
 
 <meta name="author" content="Haley Carter" />
 
-<meta name="date" content="2023-07-10" />
+<meta name="date" content="2023-07-11" />
 
-<title>Answers to pollination exercises</title>
+<title>Pollination exercises</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -356,9 +356,9 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Answers to pollination exercises</h1>
+<h1 class="title toc-ignore">Pollination exercises</h1>
 <h4 class="author">Haley Carter</h4>
-<h4 class="date">2023-07-10</h4>
+<h4 class="date">2023-07-11</h4>
 
 </div>
 
@@ -414,8 +414,6 @@ dates (Date).</p>
 <p>We’re interested in the work that went on in 2009. Subset the data
 from 2009 and save it as an object called firstyear_data (as this was
 the first year of the research effort).</p>
-<pre class="r"><code>firstyear_data &lt;- pollination %&gt;% 
-  filter(Year == 2009)</code></pre>
 </div>
 <div id="exercise-2" class="section level2">
 <h2>Exercise 2</h2>
@@ -431,18 +429,6 @@ to “minutes_observed”.</p>
 <p>Save the data we want, as described above, in the R environment with
 the new names as a new object called dc_data (for David’s Canyon
 data).</p>
-<pre class="r"><code>dc_data &lt;- pollination %&gt;% 
-  filter(PopName == &quot;David&#39;s Canyon&quot;) %&gt;% 
-  select(time=Time,
-         date=Date,
-         observer = Observer,
-         temp = Temp..begin.,
-         n_bees=Bee,
-         n_flowers=FlowObs,
-         minutes_observed=ObsevTime,
-         n_hawkmoths=HM,
-         HMrate,
-         Brate)</code></pre>
 </div>
 </div>
 <div id="creating-data-summaries" class="section level1">
@@ -458,23 +444,6 @@ table by grouping by observer.</p>
 <p>Note: We don’t want to know about the cameras, only the people so use
 filter(!str_detect(observer, “CAM”)) to filter out observers with CAM in
 their name.</p>
-<pre class="r"><code>dc_data %&gt;% 
-  filter(!str_detect(observer, &quot;CAM&quot;)) %&gt;% 
-  group_by(observer) %&gt;% 
-  summarise(moths = sum(n_hawkmoths),
-            bees = sum(n_bees),
-            flowers = sum(n_flowers),
-            observationTime = sum(minutes_observed))</code></pre>
-<pre><code>## # A tibble: 7 × 5
-##   observer moths  bees flowers observationTime
-##   &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;           &lt;dbl&gt;
-## 1 EH          76     2      22             540
-## 2 JF           0     0       8             120
-## 3 KC          13     1      18             240
-## 4 KK           3     3       3             120
-## 5 KS          41    17      41             585
-## 6 MR           3    12      15             180
-## 7 ST          24     5      21             420</code></pre>
 </div>
 <div id="exercise-4" class="section level2">
 <h2>Exercise 4</h2>
@@ -483,25 +452,6 @@ observation time? How much time did researchers spend per observation in
 each population?</p>
 <p>Note: The names of the columns are different between firstyear_data
 and dc_data.</p>
-<pre class="r"><code>firstyear_data %&gt;% 
-  group_by(PopName) %&gt;% 
-  summarize(observation_time = sum(ObsevTime),
-            time_per_obs = sum(ObsevTime)/n())</code></pre>
-<pre><code>## # A tibble: 12 × 3
-##    PopName                  observation_time time_per_obs
-##    &lt;chr&gt;                               &lt;dbl&gt;        &lt;dbl&gt;
-##  1 Baculite Mesa N                       450         75  
-##  2 Baculite Mesa S                       480         60  
-##  3 Challenger                            180         60  
-##  4 Cockleburr Creek                      720         60  
-##  5 David&#39;s Canyon                        945         59.1
-##  6 Florence                              480         60  
-##  7 Green Gulch                           600         60  
-##  8 Maverick                              480         60  
-##  9 Pueblo West Pet Cemetery              540         77.1
-## 10 Pueblo West Quinto                    180         60  
-## 11 Siesta                                120         60  
-## 12 Stem Beach                            360         60</code></pre>
 </div>
 </div>
 <div id="summarizing-values-calculated-from-the-data" class="section level1">
@@ -511,20 +461,6 @@ and dc_data.</p>
 <p>We want to know if bees or hawkmoths are more common visitors to
 these flowers. In DC, how often were there more hawkmoths than bees at
 an individual plants? How often were there more bees than hawkmoths?</p>
-<pre class="r"><code>dc_data %&gt;% 
-  mutate(bees_minus_moths = n_bees - n_hawkmoths) %&gt;% 
-  mutate(most_common_pollinator = case_when(
-    bees_minus_moths &gt; 0 ~ &quot;bee&quot;,
-    bees_minus_moths &lt; 0 ~ &quot;hawkmoth&quot;,
-    bees_minus_moths == 0 ~ &quot;both&quot;)) %&gt;% 
-  group_by(most_common_pollinator) %&gt;% 
-  summarise(how_many_plants = n())</code></pre>
-<pre><code>## # A tibble: 3 × 2
-##   most_common_pollinator how_many_plants
-##   &lt;chr&gt;                            &lt;int&gt;
-## 1 bee                                  9
-## 2 both                                20
-## 3 hawkmoth                            18</code></pre>
 </div>
 </div>
 
