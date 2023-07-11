@@ -1,0 +1,113 @@
+---
+title: "Answers to pollination exercises"
+author: "Haley Carter"
+date: "2023-07-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)
+```
+
+
+In the github repository for this workshop there is a .csv file with pollinator observation data. Read this in to RStudio using read_csv() and check out the column names and data using the code chunk below.
+
+```{r}
+pollination <- read_csv("/Users/haley/Documents/GitHub/R-intro-tidyverse-2023/pollination.csv")
+names(pollination)
+#View(pollination)
+```
+
+# What's in the data
+
+Each row of these data is a observation that came from a person, or a camera, (Observer) sat in front of a Oenothera harringtonii plant for a certain amount of minutes (ObsevTime), recording all visitors to the flowers in order to learn about the pollination of the plant species. Most visitors to these flowers are bees (Bees) and hawkmoths (Hawkmoth) of different genera (Hyles, Manduca). Some plants have more flowers than others, so the number of flowers was also recorded (FlowObs). These observations were made at multiple populations (PopName), over multiple dates (Date). 
+
+# Subsetting and changing column names
+
+## Exercise 1
+
+We're interested in the work that went on in 2009. Subset the data from 2009 and save it as an object called firstyear_data (as this was the first year of the research effort).
+
+```{r}
+firstyear_data <- pollination %>% 
+  filter(Year == 2009)
+```
+
+## Exercise 2
+
+We're also particularly interested in data from the David's Canyon population, but we don't need all of the variables. We only want "Time", "Date", "Observer", "Temp..begin.", "Bee", "FlowObs", "ObsevTime", "HM", "HMrate", and "Brate". 
+
+We also want the names of the columns to be more meaningful. Select the data we want and rename "Time" to "time", "Date" to "date", "Observer" to "observer", "Temp..begin." to "temp", "FlowObs" to "n_flowers", "Bee" to "n_bees", "HM" to "n_hawkmoths", and "ObsevTime" to "minutes_observed". 
+
+
+Save the data we want, as described above, in the R environment with the new names as a new object called dc_data (for David's Canyon data).
+
+```{r}
+dc_data <- pollination %>% 
+  filter(PopName == "David's Canyon") %>% 
+  select(time=Time,
+         date=Date,
+         observer = Observer,
+         temp = Temp..begin.,
+         n_bees=Bee,
+         n_flowers=FlowObs,
+         minutes_observed=ObsevTime,
+         n_hawkmoths=HM,
+         HMrate,
+         Brate)
+```
+
+# Creating data summaries
+
+## Exercise 3
+
+In the David's Canyon population, who saw the most hawkmoths? The most bees? Watched the most flowers? Accumulated the most observation minutes?
+
+You could query the data for each of these questions one-by-one but could also calculate all of the answers at once, and create a summary table by grouping by observer. 
+
+Note: We don't want to know about the cameras, only the people so use filter(!str_detect(observer, "CAM")) to filter out observers with CAM in their name.
+
+```{r}
+dc_data %>% 
+  filter(!str_detect(observer, "CAM")) %>% 
+  group_by(observer) %>% 
+  summarise(moths = sum(n_hawkmoths),
+            bees = sum(n_bees),
+            flowers = sum(n_flowers),
+            observationTime = sum(minutes_observed))
+```
+## Exercise 4 
+
+In 2009, in which population did researchers spend the most observation time? How much time did researchers spend per observation in each population?
+
+Note: The names of the columns are different between firstyear_data and dc_data.
+
+```{r}
+firstyear_data %>% 
+  group_by(PopName) %>% 
+  summarize(observation_time = sum(ObsevTime),
+            time_per_obs = sum(ObsevTime)/n())
+  
+```
+
+# Summarizing values calculated from the data
+
+## Exercise 5
+
+We want to know if bees or hawkmoths are more common visitors to these flowers. In DC, how often were there more hawkmoths than bees at an individual plants? How often were there more bees than hawkmoths?
+
+```{r}
+dc_data %>% 
+  mutate(bees_minus_moths = n_bees - n_hawkmoths) %>% 
+  mutate(most_common_pollinator = case_when(
+    bees_minus_moths > 0 ~ "bee",
+    bees_minus_moths < 0 ~ "hawkmoth",
+    bees_minus_moths == 0 ~ "both")) %>% 
+  group_by(most_common_pollinator) %>% 
+  summarise(how_many_plants = n())
+```
+
