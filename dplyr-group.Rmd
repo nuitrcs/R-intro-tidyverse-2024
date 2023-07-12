@@ -1,5 +1,5 @@
 ---
-title: "dplyr grouping"
+title: "dplyr: summarizing and grouping"
 output:
   html_document:
     df_print: paged
@@ -8,7 +8,7 @@ output:
     toc_depth: 1
 editor_options:
   
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r, setup, include=FALSE}
@@ -36,6 +36,12 @@ We're using the same data as sessions 1 and 2.
 ```{r, eval=TRUE}
 police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/data/ev_police.csv",
                    col_types=c("location"="c"))
+```
+
+We'll also use the built-in dataset mtcars:
+
+```{r}
+mtcars
 ```
 
 
@@ -74,9 +80,35 @@ police %>%
 We get one column per summary variable we create.  Once we group below, we'll see why we get the output in columns instead of rows.
 
 
-### EXERCISE 1
+### EXERCISE 
 
 Use summarize to compute the `min()` and `max()` `vehicle_year`
+
+```{r}
+
+```
+
+
+### n()
+
+A useful helper function with summarize is n() which counts the number of rows.  It can be useful in computing proportions.
+
+```{r}
+police %>%
+  summarize(total_obs = n())
+```
+
+```{r}
+police %>%
+  summarize(warnings = sum(outcome == "warning"),  # count the true values
+            prop_warnings = warnings/n())
+```
+
+
+
+### EXERCISE 
+
+What proportion of vechicles are Toyotas?  (vehicle_make "TOYT")
 
 ```{r}
 
@@ -105,14 +137,12 @@ police %>%
 ```
 
 
-If we want to apply multiple functions:
+If we want to apply multiple functions to each column, we put their names in a list() together:
 
 ```{r}
 police %>%
   summarize(across(!where(is.character), ## select columns that are not of type character
                    list(min, max)))# take the min and max of each column
-
-
 ```
 
 To fix the names in the output, explicitly name our summary functions in the list:
@@ -121,51 +151,29 @@ To fix the names in the output, explicitly name our summary functions in the lis
 police %>%
   summarize(across(!where(is.character), ## select columns that are not of type character
                    list(min_val=min, max_val=max)))   # take the min and max of each column
-
 ```
 
 There are other options for output naming patterns available too.
 
 
-### EXERCISE 2
+Side note: What if we want to do something to each column that is more complicated than a single function?  For example, counting missing values, which you do with `sum(is.na(x))`.  You can write your own function! You can read more about functions [here](https://r4ds.had.co.nz/functions.html).  More on this in the Intermediate Tidyverse Workshop.
 
-What if we want to do something to each column that is more complicated than a single function?  For example, counting missing values, which you do with `sum(is.na(x))`.  You can write your own function! You can read more about functions [here](https://r4ds.had.co.nz/functions.html) 
+## EXERCISE 
 
-```{r, eval=TRUE}
-na_count <- function(x) {
-  sum(is.na(x))
-}
-
-# Example for a single vector:
-na_count(police$subject_age)
-
-```
-
-Now use this new `na_count()` function to count the missing values in each column:
+Using the built-in dataset mtcars, get the average of each column.
 
 ```{r}
-police %>%
-  summarize(across(___, ___))
+
 ```
 
 
-This is similar to using the apply() function in base R:
+Now get the min and max of just the first three columns:
 
 ```{r}
-apply(police, 2, na_count) 
+
 ```
 
-#### Advanced Aside
 
-Instead of creating the function ahead of time, we could define it as part of the summarize call. We use .x to stand in for each column, and we put ~ in front of the expression to signal we’re creating a function in place (lambda function).
-
-```{r}
-police %>%
-  summarize(across(everything(),
-                   ~sum(is.na(.x)) ))  # define a function here that operates on each column
-```
-
-This is an advanced technique outside of the scope of this workshop.  But if you see a ~ inside `across()`, at least know that someone is defining their own function inline.  
 
 
 # Group By
@@ -220,21 +228,22 @@ police %>%
   summarize(mean_vehicle_age = mean(vehicle_age),
             sd_vehicle_age = sd(vehicle_age)) 
 ```
-We are getting that warning because it is telling us that all the analysis that comes next or subsequent operation will still be grouping. You can group or ungroup.
+
+We are getting extra information alerting us to the fact that our output is grouped.  If we don't want the groups in place anymore, we can ungroup().  Usually this doesn't matter though if we're just printing output to the screen. 
 
 Let's compute the ratio of warnings to citations by subject_race - note that we can use the variables we create in later expressions within the same call to `summarize()`:
 
 ```{r}
 police %>%
   group_by(subject_race) %>%
-  summarize(warnings = sum(outcome == "warning"),
-            citations = sum(outcome == "citation"), 
+  summarize(warnings = sum(outcome == "warning"),  # count how many warnings
+            citations = sum(outcome == "citation"), # count how many citations
             ratio = warnings/citations)
 ```
 
-There's considerable variation here, from 1.1 warnings for every citation given to 2.2 warnings for every citation given. So, relative more warnings to citations for black drivers than hispanic ones.
+There's considerable variation here, from 1.1 warnings for every citation given to 2.2 warnings for every citation given. So, relatively more warnings to citations for Black drivers than Hispanic ones.
 
-### EXERCISE 3
+### EXERCISE 
 
 Compute the `min()` and `max()` `vehicle_year` for each `vehicle_make`.
 
@@ -243,6 +252,20 @@ Compute the `min()` and `max()` `vehicle_year` for each `vehicle_make`.
 
 ```
 
+
+## EXERCISE 
+
+Using mtcars, compute the average horsepower (hp) for each # of cylinders (cyl)
+
+```{r}
+
+```
+
+Now compute the average value of each variable by # of cylinders
+
+```{r}
+
+```
 
 
 
@@ -256,6 +279,7 @@ police %>%
   ungroup()
 ```
 
+Usually this would come up after more complicated operations, and often after computing summary measures by group.
 
 ## Slicing
 
@@ -278,6 +302,7 @@ police %>%
   ungroup()
 ```
 
+Intead of using slice by itself, we're more likely to want to use slice_max or slice_min, or combine slice with sorting the rows in a particular order.  Let's see how to do that.
 
 # Arrange
 
@@ -301,6 +326,35 @@ arrange(police, date, desc(time))
 
 An example where it matters: compute time between stops in the dataset:
 
+First, how do we get actual date and times we can work with together
+
+```{r}
+select(police, date, time)
+
+# to combine these in a datetime object that understands dates and times, first paste together
+police %>%
+  mutate(datetime = paste(date, time)) %>%
+  ## check it
+  select(datetime, date, time)
+
+# then convert to an actual datetime object (not just character)
+police %>%
+  mutate(datetime = lubridate::ymd_hms(paste(date, time))) %>%
+  ## check it
+  select(datetime, date, time)
+```
+
+Then, we want to make sure they're in chronological order
+
+```{r}
+police %>%
+  arrange(date, time) %>%
+  mutate(datetime = lubridate::ymd_hms(paste(date, time))) %>%  
+  select(datetime)
+```
+
+Then compute the difference between each value and the previous value.  The lag() function helps us do this:
+
 ```{r}
 police %>%
   arrange(date, time) %>%
@@ -310,7 +364,7 @@ police %>%
 ```
 
 
-### EXERCISE 4
+### EXERCISE 
 
 Sort the data by `vehicle_make` and then `vehicle_year`.
 
@@ -318,10 +372,17 @@ Sort the data by `vehicle_make` and then `vehicle_year`.
 
 ```
 
+Using a slice function, get the minimum vehicle year for each vehicle make.
+
+```{r}
+
+```
+
+
 
 # Count
 
-A bonus function that I use frequently: `count()`.  It's how you'd get output similar to `table()`
+Count is how you'd get output similar to `table()` - it is used to count rows, either overall or in groups.  It's a shortcut for summarizing and using n().
 
 By itself, it counts the number of rows ("n" by default):
 
@@ -356,7 +417,7 @@ police %>%
 ```
 
 
-### EXERCISE 5
+### EXERCISE 
 
 How many times does each type of violation appear in the dataset?  Bonus: sort the results from most to least frequent.  You can do this with `arrange()` or look at the documentation for `count()` to find another option.
 

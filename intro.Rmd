@@ -87,12 +87,7 @@ fix_data
 
 Look at the documentation (help) page for `read_csv`.  You can open it by typing `?read_csv` in the console.  The `na` argument determines what values are imported as missing `NA`.  
 
-Read the data in as `fixed_data` so that **only** empty strings "" and "N/A" values are imported as missing (not "NA").  Look at `fixed_data` after importing so you can check the values.
-
-
-```{r}
-
-```
+Change the code above so that **only** empty strings "" and "N/A" values are imported as missing (not "NA").  Look at `fixed_data` after importing so you can check the values.
 
 
 # Tibbles
@@ -123,6 +118,7 @@ as.data.frame(police)[, 1]
 dplyr is the core package of the tidyverse.  It includes functions for working with tibbles (or any data frames).  While you can still use base R operations on tibbles/data frames, such as using `$` and `[]` subsetting like we did above, dplyr provides alternatives to all of the common data manipulation tasks.
 
 Here, we're just going to look at the basics of subsetting data to get a feel for how tidyverse functions typically work. We'll cover more detail on dplyr functions a little later.
+
 
 Before we start, let's remember what columns are in our data:
 
@@ -229,7 +225,9 @@ We don't usually use `slice()` in this way when working with dplyr.  This is bec
 
 So, we can choose rows and choose columns separately; how do we combine these operations?  `dplyr`, and other tidyverse, commands can be strung together is a series with a `%>%` (say/read: pipe) operator.  If you are familiar with working in a terminal/at the command line, it works like a bash pipe character `|`.  It takes the output of the command on the left and makes that the first input to the command on the right. 
 
-This works because the functions all take a data frame as the first input, and they return a data frame as the output.  
+It's similar to the new native pipe operator in R: |> but it has a few additional features that make it a bit more flexible.  
+
+The pipe works well with dplyr (and other tidyverse packages) because the functions almost all take a data frame as the first input, and they return a data frame as the output.  
 
 We can rewrite 
 
@@ -285,7 +283,18 @@ You can use the pipe operator to string together commands outside of the tidyver
 ```{r}
 # sum(is.na(police$beat))
 is.na(police$beat) %>% sum()
+
+# or
+police$beat %>% is.na() %>% sum()
 ```
+
+
+Advanced aside: it is possible to select parts of a data frame within a piped set of commands (with the %>% pipe, but not the |> pipe).  A . represents whatever the result of the left of the %>% is:
+
+```{r}
+police %>% .$beat %>% is.na() %>% sum()
+```
+
 
 
 ### EXERCISE 4a: combine select() and filter() to subset data

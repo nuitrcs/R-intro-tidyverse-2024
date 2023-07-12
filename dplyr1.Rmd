@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 2
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r, setup, include=FALSE}
@@ -32,13 +32,8 @@ police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/d
 ```
 
 
-# dplyr
+This file goes into more detail on the select and filter functions we talked about before, and adds in mutate for changing variables or making new ones.  
 
-dplyr is at the core of the tidyverse.  It contains six main functions, each a verb, of actions you frequently take with a data frame.  We covered a few of these in the intro and will build on select, filter, and mutate in this document.
-
-If you have a background in Excel, you probably will start thinking about equivalences in your mind. That's great! If you have worked on base R (not tidyverse), don't overthink it. What's the most important thing to keep in mind right now? Each of these functions takes a data frame as the first input.  Within the function call, we can refer to the column names without quotes and without $ notation. 
-
-We will begin with the `select` for choosing columns, and `filter` for choosing rows. Remember `select` is for columns, while `filter` is for rows. Let's start!
 
 # Select: Choose Columns
 
@@ -74,28 +69,46 @@ The result is the same if we use numbers.
 police %>% select(26:29)
 ```
 
-We can select the rightmost columns with `last_col()`. You can check about with `names` that it is the "last" column in our dataset.
+
+We can select the rightmost columns with `last_col()`. You can check with `names` that it is the "last" column in our dataset.
 
 ```{r, eval=F}
 police %>% select(last_col())
 ```
 
-You can think `everything()` as the opposite of selecting one or a few columns. But it is most useful when combined with other functions. After all, we use select because you don't want the whole database but part of it! We will see the use of `everything()` and other selection operators below.  
+You can get more than one column from the end:
 
-```{r, eval=F}
-police %>% select(everything())
+```{r}
+select(police, last_col(0:3))
+```
+
+It start with 0 because here, it's the number of columns to offset from the end:
+
+```{r}
+# these are the same
+select(police, last_col(0)) %>% names()
+select(police, last_col()) %>% names()
+```
+
+
+### EXERCISE
+
+Select just the first 6 columns of police.
+
+```{r}
+
 ```
 
 
 ## Excluding columns
 
-We can also say which columns we don't want by putting a `-` (minus) in front of the name. Think about it as subtracting or or more columns. The idea of subtracting makes a lot of sense -- we have now 27 rather than the original 29 columns in the data. 
+We can also say which columns we don't want by putting a `-` (minus) in front of the name. Think about it as subtracting one or more columns. The idea of subtracting makes a lot of sense -- after the command below, we have now 27 rather than the original 29 columns in the data. 
 
 ```{r, eval=F}
 police %>% select(-raw_row_number, -subject_age)
 ```
 
-When using negated `-` column names, if we start with negations, it will get messy. Make sure to *avoid* the following code:
+When using negated `-` column names, if we start with negations and try to mix in columns we want to keep, it will get messy. Make sure to *avoid* the following code:
 
 ```{r, eval=F}
 police %>% select(-raw_row_number, -subject_age, time:outcome) 
@@ -113,21 +126,32 @@ We don't need to include -raw_row_number -- it is not part of the range between 
 police %>% select(time:outcome, -subject_age, -raw_row_number) 
 ```
 
+### EXERCISE
+
+Drop the last 4 columns from `police` (temporarily - write an expression that will give you police with those columns not included).
+
+```{r}
+
+```
+
+
 ## Reordering and renaming
 
 We've already seen that columns will appear in the result in the order that we list the names.  
 
-If you want to pull a few columns over to the left so that they are the ones that show first when you look at the data you can use the everything() helper function. 
+If we list a column name more than once, it will appear in the first position only (it won't be repeated):
 
-We did this as well in the intro, see if you can write code below to use select() and everything() to bring outcome to the left from police. 
-
-## Exercise:
-
-```{r, eval=F}
-
+```{r}
+select(police, date, time, location, date)
 ```
 
-Each column only gets included once, in the position that it first appears.  So "outcome" becomes the leftmost column above and no longer appears in it's original spot.  
+
+If you want to pull a few columns over to the left so that they are the ones that show first when you look at the data, the everything() helper function can be useful. 
+
+
+```{r, eval=F}
+select(police, outcome, everything())
+```
 
 We can also rename columns while using `select()`.  The syntax is `new_name = old_name`.
 
@@ -137,25 +161,11 @@ police %>% select(raw_id=raw_row_number, date, time)
 
 or we can use `rename()` to only rename, without affecting which columns are included or their order (all of the columns are kept in the same order):
 
-```{r, reval=F}
+```{r, eval=F}
 police %>% rename(raw_id=raw_row_number)
 ```
 
-Remember, this doesn't change police because we didn't save the result.  So far, we've just been printing the copy of the data frame that is returned by the function.  If we want to change our data frame, we'd need to save the result back to the `police` object.We can also save the changes in another object with a different name such as `police_new`.
-
-## Exercise: 
-
-Assign the results of renaming raw_row_number to raw_id in police to police_new
-
-```{r, eval=F}
-police_new <- 
-```
-
-We saved the same data with a different name for one column, while keep all other and their original order. But we can also save only a few variables. For convenience, we  name `police_short` our new object.
-
-```{r, eval=F}
-police_short <- select(police, raw_row_number, date, time)
-```
+Remember, this doesn't change police because we didn't save the result.  So far, we've just been printing the copy of the data frame that is returned by the function.  If we want to change our data frame, we'd need to save the result back to the `police` object. We can also save the changes in another object with a different name such as `police_new`.
 
 
 ### EXERCISES
@@ -169,8 +179,8 @@ Using `select` and/or `rename` as needed:
 
 Hint: 
 
-- Remember that you can chain dplyr commands together with `%>%`.*
-- You don't need to save the results. If you save the changes, use a different name such as *police_something*.
+- Remember that you can chain dplyr commands together with `%>%`
+- You don't need to save the results in a new variable
 
 
 ```{r}
@@ -205,11 +215,11 @@ police %>% select(-contains("subject"))
 
 And there are even more [select helper functions](https://tidyselect.r-lib.org/reference/language.html).  
 
-### EXERCISE 4
+### EXERCISE
 
-Use `select()` to get a copy of `police` without the columns that start with "raw".
+Use `select()` to get a copy of `police` without the columns that start with "raw".  
 
-Hint: If you mess up your `police` dataset, re-run the cell near the top of the file under the Data header and read the data in again fresh.
+In other words, drop the columns that start with "raw", except 1) don't permanently change `police` and 2) instead of dropping, we're really selecting what we want to keep instead.
 
 
 ```{r, }
@@ -255,18 +265,30 @@ police %>% select(where(is.numeric))
 
 `where` can be used with any function that returns a *single* TRUE or FALSE value for each column.  
 
-## Exercise 
+### EXERCISE 
 
-Select only columns with character data that contain 'raw' in their name.
+Select columns with logical (TRUE/FALSE) data from police:
 
 ```{r}
 
 ```
 
+## Combining multiple select conditions
+
+What if we want to combine multiple select conditions?  For example, select columns from police that contain "vehicle" and are character data?
+
+We can use & and |
+
+```{r}
+select(police, contains("vehicle"))
+select(police, contains("vehicle") & where(is.character))
+```
+
+
 
 # Filter: Choose Rows
 
-The `filter()` function lets us choose which rows of data to keep by writing expressions that return TRUE or FALSE for every row in the data frame.  Recall from last session:
+The `filter()` function lets us choose which rows of data to keep by writing expressions that return TRUE or FALSE for every row in the data frame.  Recall:
 
 ```{r, eval=F}
 police %>%  filter(date == "2017-01-02")
@@ -322,13 +344,44 @@ mtcars %>% filter(hp == max(hp))
 ```
 
 
-### EXERCISE
+### EXERCISES
 
-Using `mtcars`, find the car with the minimum (`min`) displacement (disp) value:
+Using `mtcars`, find the car with the minimum (`min()`) displacement (disp) value:
 
 ```{r}
 
 ```
+
+Find cars that do not have the median number of cylinders.  
+
+```{r}
+
+```
+
+
+## EXERCISE
+
+Using `police`: find observations that are not moving violations.  The violation variable has a few categories.  Take a look:
+
+```{r}
+table(police$violation)
+```
+
+Write code to find stops that don't start with "Moving Violation".  
+
+str_detect() is a useful function for this.  Example:
+
+```{r}
+police %>%
+  filter(str_detect(subject_race, "w"))
+```
+
+Now find the stops that are NOT moving violations:
+
+```{r}
+
+```
+
 
 
 # Bonus: slice variants
@@ -340,7 +393,7 @@ mtcars %>% slice_max(hp)
 slice_max(mtcars, hp)
 ```
 
-By default it just gives us one row, but we can ask for more than one by setting the `n` argument:
+By default it just gives us one maximum value (all rows that have that value though), but we can ask for more than one highest value by setting the `n` argument:
 
 ```{r, eval=TRUE}
 slice_max(mtcars, hp, n=3)
@@ -354,7 +407,18 @@ There's also a minimum version:
 slice_min(mtcars, disp)
 ```
 
-Like we did with `slice_max`, can also specify the `n` argument.
+Like we did with `slice_max`, you can also specify the `n` argument.
+
+## EXERCISE
+
+Find the 2 cars with the best mpg values in mtcars (high values are better).
+
+Then, looking only at cars with 4 cylinders, find the 2 with the best mpg values.
+
+```{r}
+
+```
+
 
 # Mutate: Change or Create Columns
 
@@ -363,7 +427,8 @@ Like we did with `slice_max`, can also specify the `n` argument.
 We name the column we're mutating and set the value.  If the name already exists, it will update the column. If the name doesn't exist, it will create a new variable (column is appended at the end of existing columns).  
 
 ```{r, eval=TRUE}
-police %>% mutate(vehicle_age = 2017 - vehicle_year) %>%
+police %>% 
+  mutate(vehicle_age = 2017 - vehicle_year) %>%
   select(starts_with("vehicle"))  # just to pick a few columns to look at
 ```
 
@@ -392,19 +457,20 @@ police %>%
 
 Side note: there is a tidyverse version of `ifelse()` called `if_else()` -- with the underscore or low dash symbol -- that works generally the same except it is stricter about checking data types.
 
-`mutate()` can also change an existing column.  The location column in the data contains zip codes, that were read in as numeric values.  This means the leading zero on some zip codes has been lost.  Convert location to character data, and add back in the leading 0 if it should be there.
+`mutate()` can also change an existing column.  It will overwrite it.
 
-Here I'll change the location column twice in the same call with two different transformations:
 
 ```{r, eval=TRUE}
 police %>%
-  mutate(location = as.character(location),  # first convert to character, then recode below
-         location = ifelse(nchar(location) == 4,  # ifelse test (vector of TRUE and FALSE)
-                           paste0("0", location), # value if TRUE
-                           location)) %>%  # value if FALSE
-  select(location) %>%  # selecting just the column we mutated to look at
-  filter(startsWith(location, "0"))  # selecting a few rows to look at the change
+  mutate(department_id = "EPD")
 ```
+
+We didn't save the output, so the column hasn't changed permanently - only in the output.
+
+```{r}
+police
+```
+
 
 Remember that when using `mutate()`, you're operating on the entire column at once, so you can't select just a subset of the vector as you would with `[]`.  This means more frequently using functions like `ifelse()` or helper functions such as `na_if()`, `replace_na()`, or `recode()`.  
 
