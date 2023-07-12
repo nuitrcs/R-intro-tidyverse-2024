@@ -299,23 +299,17 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before {
-content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "\e259";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "";
-border: none;
-}
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "";
+content: "\e258";
 font-family: 'Glyphicons Halflings';
-display: inline-block;
-padding: 10px;
-border-right: 1px solid #ddd;
+border: none;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -365,7 +359,7 @@ display: none;
 
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-## ✔ dplyr     1.1.1     ✔ readr     2.1.4
+## ✔ dplyr     1.1.2     ✔ readr     2.1.4
 ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
 ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
 ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
@@ -374,31 +368,31 @@ display: none;
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
-<p>In the github repository for this workshop there is a .csv file with
-pollinator observation data. Read this in to RStudio using read_csv()
-and check out the column names and data using the code chunk below.</p>
-<pre class="r"><code>pollination &lt;- read_csv(&quot;/Users/haley/Documents/GitHub/R-intro-tidyverse-2023/pollination.csv&quot;)</code></pre>
-<pre><code>## New names:
-## Rows: 427 Columns: 24
-## ── Column specification
-## ──────────────────────────────────────────────────────── Delimiter: &quot;,&quot; chr
-## (4): PopName, Time, Date, Observer dbl (20): ...1, Year, Temp..begin.,
-## Rel.Hum..begin., Var.8, Bee, Hawkmoth, H...
-## ℹ Use `spec()` to retrieve the full column specification for this data. ℹ
-## Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## • `` -&gt; `...1`</code></pre>
+<p>In the materials for this workshop there is a .csv file with
+pollinator observation data: pollination.csv. Read this in to RStudio
+using read_csv() and check out the column names and data using the code
+chunk below.</p>
+<pre class="r"><code>pollination &lt;- read_csv(&quot;data/pollination.csv&quot;)</code></pre>
+<pre><code>## Rows: 427 Columns: 23
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr  (4): PopName, Time, Date, Observer
+## dbl (19): Year, Temp..begin., Rel.Hum..begin., Var.8, Bee, Hawkmoth, Hyles, ...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <pre class="r"><code>names(pollination)</code></pre>
-<pre><code>##  [1] &quot;...1&quot;            &quot;PopName&quot;         &quot;Time&quot;            &quot;Year&quot;           
-##  [5] &quot;Date&quot;            &quot;Observer&quot;        &quot;Temp..begin.&quot;    &quot;Rel.Hum..begin.&quot;
-##  [9] &quot;Var.8&quot;           &quot;Bee&quot;             &quot;Hawkmoth&quot;        &quot;Hyles&quot;          
-## [13] &quot;Manduca&quot;         &quot;none&quot;            &quot;Other&quot;           &quot;FlowObs&quot;        
-## [17] &quot;ObsevTime&quot;       &quot;HM&quot;              &quot;HMrate&quot;          &quot;Brate&quot;          
-## [21] &quot;Manducarate&quot;     &quot;Hylesrate&quot;       &quot;Hawkrate&quot;        &quot;Otherrate&quot;</code></pre>
+<pre><code>##  [1] &quot;PopName&quot;         &quot;Time&quot;            &quot;Year&quot;            &quot;Date&quot;           
+##  [5] &quot;Observer&quot;        &quot;Temp..begin.&quot;    &quot;Rel.Hum..begin.&quot; &quot;Var.8&quot;          
+##  [9] &quot;Bee&quot;             &quot;Hawkmoth&quot;        &quot;Hyles&quot;           &quot;Manduca&quot;        
+## [13] &quot;none&quot;            &quot;Other&quot;           &quot;FlowObs&quot;         &quot;ObsevTime&quot;      
+## [17] &quot;HM&quot;              &quot;HMrate&quot;          &quot;Brate&quot;           &quot;Manducarate&quot;    
+## [21] &quot;Hylesrate&quot;       &quot;Hawkrate&quot;        &quot;Otherrate&quot;</code></pre>
 <pre class="r"><code>#View(pollination)</code></pre>
 <div id="whats-in-the-data" class="section level1">
 <h1>What’s in the data</h1>
-<p>Each row of these data is a observation that came from a person, or a
-camera, (Observer) sat in front of a Oenothera harringtonii plant for a
+<p>Each row of these data is a observation that came from a person or a
+camera (Observer) sat in front of a Oenothera harringtonii plant for a
 certain amount of minutes (ObsevTime), recording all visitors to the
 flowers in order to learn about the pollination of the plant species.
 Most visitors to these flowers are bees (Bees) and hawkmoths (Hawkmoth)
@@ -411,56 +405,105 @@ dates (Date).</p>
 <h1>Subsetting and changing column names</h1>
 <div id="exercise-1" class="section level2">
 <h2>Exercise 1</h2>
-<p>We’re interested in the work that went on in 2009. Subset the data
-from 2009 and save it as an object called firstyear_data (as this was
-the first year of the research effort).</p>
+<p>We don’t need all of the variables. We only want “PopName”, Time”,
+“Date”, “Observer”, “Temp..begin.”, “Bee”, “FlowObs”, “ObsevTime”, “HM”,
+“HMrate”, and “Brate”.</p>
+<p>We also want the names of the columns to be more meaningful.</p>
+<p>Select the variables we want and rename “PopName” to “pop”, Time” to
+“time”, “Date” to “date”, “Observer” to “observer”, “Temp..begin.” to
+“temp”, “FlowObs” to “n_flowers”, “Bee” to “n_bees”, “HM” to
+“n_hawkmoths”, and “ObsevTime” to “minutes_observed”. Keep “HMrate” and
+“Brate” in the data too.</p>
+<p>Save the result back to the pollinators variable (overwrite it)</p>
+<p>Hint: when renaming while selecting columns, new_name =
+existing_name. No quotation marks needed.</p>
 </div>
 <div id="exercise-2" class="section level2">
 <h2>Exercise 2</h2>
-<p>We’re also particularly interested in data from the David’s Canyon
-population, but we don’t need all of the variables. We only want “Time”,
-“Date”, “Observer”, “Temp..begin.”, “Bee”, “FlowObs”, “ObsevTime”, “HM”,
-“HMrate”, and “Brate”.</p>
-<p>We also want the names of the columns to be more meaningful. Select
-the data we want and rename “Time” to “time”, “Date” to “date”,
-“Observer” to “observer”, “Temp..begin.” to “temp”, “FlowObs” to
-“n_flowers”, “Bee” to “n_bees”, “HM” to “n_hawkmoths”, and “ObsevTime”
-to “minutes_observed”.</p>
-<p>Save the data we want, as described above, in the R environment with
-the new names as a new object called dc_data (for David’s Canyon
-data).</p>
+<p>We’re particularly interested in data from the David’s Canyon
+population. Subset the data so it only includes observations where the
+population (PopName variable) is “David’s Canyon”</p>
+<p>Save the subset for David’s Canyon in a variable called dc_data.</p>
+<p>Hint: What function do you use to subset the observations?</p>
+</div>
+<div id="exercise-3" class="section level2">
+<h2>Exercise 3</h2>
+<p>Which observer spent the longest time observing in a single session
+(remember: each row is a session - an observation of a plant).</p>
+<p>Which HUMAN observer had the longest observation period? Filter out
+observers with CAM in their name to find human observers. Hint:
+<code>str_detect</code> is a useful function for this:
+<code>str_detect(variable_name, &quot;CAM&quot;)</code></p>
+</div>
+<div id="exercise-4" class="section level2">
+<h2>Exercise 4</h2>
+<p>Make a new variable total_pollinators in the pollinators data frame
+that is the total bees and hawkmoths observed.</p>
+<p>Now find which rows (observation sessions) observed the most
+pollinators</p>
 </div>
 </div>
 <div id="creating-data-summaries" class="section level1">
 <h1>Creating data summaries</h1>
-<div id="exercise-3" class="section level2">
-<h2>Exercise 3</h2>
-<p>In the David’s Canyon population, who saw the most hawkmoths? The
-most bees? Watched the most flowers? Accumulated the most observation
-minutes?</p>
+<div id="exercise-5" class="section level2">
+<h2>Exercise 5</h2>
+<p>In the David’s Canyon population (dc_data data frame, created above),
+who (which observer):</p>
+<ul>
+<li>Saw the most hawkmoths?</li>
+<li>The most bees?</li>
+<li>Watched the most flowers?</li>
+<li>Accumulated the most observation minutes?</li>
+</ul>
 <p>You could query the data for each of these questions one-by-one but
 could also calculate all of the answers at once, and create a summary
 table by grouping by observer.</p>
-<p>Note: We don’t want to know about the cameras, only the people so use
-filter(!str_detect(observer, “CAM”)) to filter out observers with CAM in
-their name.</p>
+<p>Hint: The same observer can have multiple observations. How can you
+tell how many total insects, flowers, etc. they observed?</p>
+<p>We don’t want to know about the cameras, only the people! Filter out
+observers with CAM in their name. Hint: <code>str_detect</code> is a
+useful function for this.</p>
+<p>Challenge: do the above using across()</p>
 </div>
-<div id="exercise-4" class="section level2">
-<h2>Exercise 4</h2>
-<p>In 2009, in which population did researchers spend the most
-observation time? How much time did researchers spend per observation in
-each population?</p>
-<p>Note: The names of the columns are different between firstyear_data
-and dc_data.</p>
+<div id="exercise-6" class="section level2">
+<h2>Exercise 6</h2>
+<p>Using the full data, in 2009, in which population did researchers
+spend the most observation time (the most minutes)? How much time on
+average did researchers spend per observation in each population?</p>
 </div>
 </div>
 <div id="summarizing-values-calculated-from-the-data" class="section level1">
 <h1>Summarizing values calculated from the data</h1>
-<div id="exercise-5" class="section level2">
-<h2>Exercise 5</h2>
+<div id="exercise-7" class="section level2">
+<h2>Exercise 7</h2>
 <p>We want to know if bees or hawkmoths are more common visitors to
-these flowers. In DC, how often were there more hawkmoths than bees at
-an individual plants? How often were there more bees than hawkmoths?</p>
+these flowers. In dc_data (David’s Canyon), how often were there more
+hawkmoths than bees at an individual plant? How often were there more
+bees than hawkmoths?</p>
+</div>
+</div>
+<div id="even-more" class="section level1">
+<h1>Even More!</h1>
+<div id="exercise-8" class="section level2">
+<h2>Exercise 8</h2>
+<p>What proportion of observations were made at temperatures above 70
+degrees?</p>
+</div>
+<div id="exercise-9" class="section level2">
+<h2>Exercise 9</h2>
+<p>Are more pollinators observed when the temperature is above or below
+70 degrees?</p>
+<p>There are a few ways you might compare the number of pollinators.
+Compare the total number of pollinators in each condition, then the
+average number. Feeling adventurous? Compute the number of pollinators
+observed per observation minute and then compare that normalized rate
+instead.</p>
+</div>
+<div id="exercise-10" class="section level2">
+<h2>Exercise 10</h2>
+<p>Same as above: Are more pollinators observed when the temperature is
+above or below 70 degrees? BUT does the answer vary based on the
+population?</p>
 </div>
 </div>
 

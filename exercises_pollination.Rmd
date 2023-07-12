@@ -20,7 +20,7 @@ library(tidyverse)
 In the materials for this workshop there is a .csv file with pollinator observation data: pollination.csv. Read this in to RStudio using read_csv() and check out the column names and data using the code chunk below.
 
 ```{r}
-pollination <- read_csv("pollination.csv")
+pollination <- read_csv("data/pollination.csv")
 names(pollination)
 #View(pollination)
 ```
