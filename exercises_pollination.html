@@ -299,17 +299,23 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "\e259";
+.tabset-dropdown > .nav-tabs > li.active:before {
+content: "";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "\e258";
-font-family: 'Glyphicons Halflings';
+content: "";
 border: none;
+}
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "";
+font-family: 'Glyphicons Halflings';
+display: inline-block;
+padding: 10px;
+border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -359,7 +365,7 @@ display: none;
 
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-## ✔ dplyr     1.1.2     ✔ readr     2.1.4
+## ✔ dplyr     1.1.1     ✔ readr     2.1.4
 ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
 ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
 ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
@@ -395,8 +401,8 @@ chunk below.</p>
 camera (Observer) sat in front of a Oenothera harringtonii plant for a
 certain amount of minutes (ObsevTime), recording all visitors to the
 flowers in order to learn about the pollination of the plant species.
-Most visitors to these flowers are bees (Bees) and hawkmoths (Hawkmoth)
-of different genera (Hyles, Manduca). Some plants have more flowers than
+Most visitors to these flowers are bees (Bees) and hawkmoths (HM) of
+different genera (Hyles, Manduca). Some plants have more flowers than
 others, so the number of flowers was also recorded (FlowObs). These
 observations were made at multiple populations (PopName), over multiple
 dates (Date).</p>

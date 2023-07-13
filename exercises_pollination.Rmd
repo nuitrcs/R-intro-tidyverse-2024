@@ -28,7 +28,7 @@ names(pollination)
 
 # What's in the data
 
-Each row of these data is a observation that came from a person or a camera (Observer) sat in front of a Oenothera harringtonii plant for a certain amount of minutes (ObsevTime), recording all visitors to the flowers in order to learn about the pollination of the plant species. Most visitors to these flowers are bees (Bees) and hawkmoths (Hawkmoth) of different genera (Hyles, Manduca). Some plants have more flowers than others, so the number of flowers was also recorded (FlowObs). These observations were made at multiple populations (PopName), over multiple dates (Date). 
+Each row of these data is a observation that came from a person or a camera (Observer) sat in front of a Oenothera harringtonii plant for a certain amount of minutes (ObsevTime), recording all visitors to the flowers in order to learn about the pollination of the plant species. Most visitors to these flowers are bees (Bees) and hawkmoths (HM) of different genera (Hyles, Manduca). Some plants have more flowers than others, so the number of flowers was also recorded (FlowObs). These observations were made at multiple populations (PopName), over multiple dates (Date). 
 
 # Subsetting and changing column names
 
