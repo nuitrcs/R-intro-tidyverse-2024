@@ -19,7 +19,7 @@ This is an [R Markdown](https://rmarkdown.rstudio.com/) document.  Follow the li
 
 # Setup
 
-```{r, eval=TRUE}
+```{r, eval=T}
 library(tidyverse)
 ```
 
@@ -76,13 +76,13 @@ We can select the rightmost columns with `last_col()`. You can check with `names
 police %>% select(last_col())
 ```
 
-You can get more than one column from the end:
+You can use this to count columns from the right:
 
 ```{r}
-select(police, last_col(0:3))
+select(police, last_col(offset=3))
 ```
 
-It start with 0 because here, it's the number of columns to offset from the end:
+This is one of the few places R acts like it's counting from 0, that's because it's the number of columns to offset from the end:
 
 ```{r}
 # these are the same
