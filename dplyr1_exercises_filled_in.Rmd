@@ -142,14 +142,26 @@ police %>% select(-time:-outcome)
 Drop the last 4 columns from `police` (temporarily - write an expression that will give you police with those columns not included).
 
 ```{r}
+police %>% 
+  select(1:25)
+
+police %>% 
+  select(raw_row_number:vehicle_year)
+
+police %>% 
+  select(-26:-29)
+
+# with last_col:
 police %>% select(-last_col(0):-last_col(3)) # 25 columns
 
+police %>% select(1:last_col(4)) # 25 columns
+
+# not a recommended answer, but an answer given in class that also works:
 police %>% 
   select(-last_col()) %>% 
   select(-last_col()) %>% 
+  select(-last_col()) %>% 
   select(-last_col())
-
-police %>% select(1:last_col(4)) # 25 columns
 ```
 
 
