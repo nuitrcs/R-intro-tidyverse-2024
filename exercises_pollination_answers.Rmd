@@ -1,0 +1,256 @@
+---
+title: "Pollination exercises"
+author: "Haley Carter"
+date: "2023-07-11"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(tidyverse)
+```
+
+
+
+In the materials for this workshop there is a .csv file with pollinator observation data: pollination.csv. Read this in to RStudio using read_csv() and check out the column names and data using the code chunk below.
+
+```{r}
+pollination <- read_csv("data/pollination.csv")
+names(pollination)
+#View(pollination)
+```
+
+
+# What's in the data
+
+Each row of these data is a observation that came from a person or a camera (Observer) sat in front of a Oenothera harringtonii plant for a certain amount of minutes (ObsevTime), recording all visitors to the flowers in order to learn about the pollination of the plant species. Most visitors to these flowers are bees (Bees) and hawkmoths (HM) of different genera (Hyles, Manduca). Some plants have more flowers than others, so the number of flowers was also recorded (FlowObs). These observations were made at multiple populations (PopName), over multiple dates (Date). 
+
+# Subsetting and changing column names
+
+## Exercise 1
+
+We don't need all of the variables. We only want "PopName", Time", "Date", "Observer", "Temp..begin.", "Bee", "FlowObs", "ObsevTime", "HM", "HMrate", and "Brate". 
+
+We also want the names of the columns to be more meaningful. 
+
+Select the variables we want and rename "PopName" to "pop", Time" to "time", "Date" to "date", "Observer" to "observer", "Temp..begin." to "temp", "FlowObs" to "n_flowers", "Bee" to "n_bees", "HM" to "n_hawkmoths", and "ObsevTime" to "minutes_observed".  Keep "HMrate" and "Brate" in the data too.
+
+Save the result back to the pollinators variable (overwrite it)
+
+Hint: when renaming while selecting columns, new_name = existing_name.  No quotation marks needed.
+
+```{r}
+pollination <- pollination %>% 
+  select(pop = PopName,
+         time=Time,
+         date=Date,
+         observer = Observer,
+         temp = Temp..begin.,
+         n_bees=Bee,
+         n_flowers=FlowObs,
+         minutes_observed=ObsevTime,
+         n_hawkmoths=HM,
+         HMrate,
+         Brate)
+```
+
+
+
+## Exercise 2
+
+We're particularly interested in data from the David's Canyon population.  Subset the data so it only includes observations where the population (PopName variable) is "David's Canyon"
+
+Save the subset for David's Canyon in a variable called dc_data.
+
+Hint: What function do you use to subset the observations?
+
+```{r}
+dc_data <- pollination %>% 
+  filter(pop == "David's Canyon")
+```
+
+## Exercise 3
+
+Which observer spent the longest time observing in a single session (remember: each row is a session - an observation of a plant).
+
+```{r}
+dc_data %>% 
+  slice_max(minutes_observed)
+```
+
+Which HUMAN observer had the longest observation period? Filter out observers with CAM in their name to find human observers.  Hint: `str_detect` is a useful function for this: `str_detect(variable_name, "CAM")`
+
+```{r}
+dc_data %>% 
+  filter(!str_detect(observer, "CAM")) %>% 
+  slice_max(minutes_observed)
+```
+
+
+## Exercise 4
+
+Make a new variable total_pollinators in the pollinators data frame that is the total bees and hawkmoths observed.
+
+```{r}
+pollination %>%
+  mutate(total_pollinators = n_bees+n_hawkmoths) %>% 
+  select(total_pollinators, everything())
+# select just used to bring that column to the front where you can see it
+```
+
+Now find which rows (observation sessions) observed the most pollinators
+
+```{r}
+pollination %>%
+  mutate(total_pollinators = n_bees+ n_hawkmoths) %>% 
+  slice_max(total_pollinators) %>% 
+  select(total_pollinators, everything())
+# select just used to bring that column to the front where you can see it
+```
+
+
+
+# Creating data summaries
+
+## Exercise 5
+
+In the David's Canyon population (dc_data data frame, created above), who (which observer):
+
+* Saw the most hawkmoths? 
+* The most bees? 
+* Watched the most flowers? 
+* Accumulated the most observation minutes?
+
+You could query the data for each of these questions one-by-one but could also calculate all of the answers at once, and create a summary table by grouping by observer. 
+
+Hint: The same observer can have multiple observations.  How can you tell how many total insects, flowers, etc. they observed?
+
+We don't want to know about the cameras, only the people! Filter out observers with CAM in their name.  Hint: `str_detect` is a useful function for this.
+
+```{r}
+dc_data %>% 
+  filter(!str_detect(observer, "CAM")) %>% 
+  group_by(observer) %>% 
+  summarise(moths = sum(n_hawkmoths),
+            bees = sum(n_bees),
+            flowers = sum(n_flowers),
+            observationTime = sum(minutes_observed))
+```
+
+Challenge: do the above using across()
+
+```{r}
+dc_data %>% 
+  filter(!str_detect(observer, "CAM")) %>% 
+  group_by(observer) %>% 
+  summarise(across(c(n_hawkmoths,
+                     n_bees,
+                     n_flowers,
+                     minutes_observed), sum))
+```
+
+
+
+## Exercise 6
+
+Using the full data, in 2009, in which population did researchers spend the most observation time (the most minutes)? How much time on average did researchers spend per observation in each population?
+
+```{r}
+pollination %>% 
+  separate(date, into = c("month", "day", "year"), remove = F) %>% 
+  filter(year == "09") %>% 
+  group_by(pop) %>% 
+  summarise(total_obsTime = sum(minutes_observed),
+            average_obsTime = mean(minutes_observed))
+  
+```
+
+# Summarizing values calculated from the data
+
+## Exercise 7
+
+We want to know if bees or hawkmoths are more common visitors to these flowers. In dc_data (David's Canyon), how often were there more hawkmoths than bees at an individual plant? How often were there more bees than hawkmoths?
+
+```{r}
+dc_data %>% 
+  mutate(bees_minus_moths = n_bees - n_hawkmoths) %>% 
+  mutate(most_common_pollinator = case_when(
+    bees_minus_moths > 0 ~ "bee",
+    bees_minus_moths < 0 ~ "hawkmoth",
+    bees_minus_moths == 0 ~ "both")) %>% 
+  group_by(most_common_pollinator) %>% 
+  summarise(how_many_plants = n())
+```
+
+
+# Even More!
+
+## Exercise 8
+
+What proportion of observations were made at temperatures above 70 degrees?
+
+```{r}
+pollination %>% 
+  mutate(hightemp = case_when(
+    temp > 70 ~ TRUE,
+    temp <= 70 ~ FALSE
+  )) %>% 
+  summarise(propHighTemp = mean(hightemp, na.rm = T))
+```
+
+
+
+## Exercise 9
+
+Are more pollinators observed when the temperature is above or below 70 degrees?
+
+There are a few ways you might compare the number of pollinators.  Compare the total number of pollinators in each condition, then the average number.  Feeling adventurous?  Compute the number of pollinators observed per observation minute and then compare that normalized rate instead.  
+
+
+```{r}
+pollination %>% 
+  mutate(total_pollinators = n_bees+ n_hawkmoths) %>% 
+  mutate(hightemp = case_when(
+    temp > 70 ~ TRUE,
+    temp <= 70 ~ FALSE
+  )) %>% 
+  group_by(hightemp) %>% 
+  summarise(totalPoll = sum(total_pollinators),
+            meanPoll = mean(total_pollinators))
+
+# normalized by time
+pollination %>% 
+  mutate(total_pollinators = n_bees+ n_hawkmoths,
+         pollPerMin = total_pollinators/minutes_observed) %>% 
+  mutate(hightemp = case_when(
+    temp > 70 ~ TRUE,
+    temp <= 70 ~ FALSE
+  )) %>% 
+  group_by(hightemp) %>% 
+  summarise(totalPollPerMin = sum(pollPerMin),
+            meanPollPerMin = mean(pollPerMin))
+```
+
+
+## Exercise 10
+
+Same as above: Are more pollinators observed when the temperature is above or below 70 degrees? BUT does the answer vary based on the population?
+
+```{r}
+pollination %>% 
+  mutate(total_pollinators = n_bees+ n_hawkmoths,
+         pollPerMin = total_pollinators/minutes_observed) %>% 
+  mutate(hightemp = case_when(
+    temp > 70 ~ TRUE,
+    temp <= 70 ~ FALSE
+  )) %>% 
+  group_by(pop, hightemp) %>% 
+  summarise(totalPollPerMin = sum(pollPerMin),
+            meanPollPerMin = mean(pollPerMin))
+```
+
