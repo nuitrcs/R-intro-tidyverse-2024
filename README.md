@@ -6,9 +6,9 @@ This workshop is being offered in-person in June 2024 by [Northwestern IT Resear
 
 We will cover the following topics:
 
-1. Introduction to tidyverse (intro.Rmd)
-2. Introduction to dplyr: select, filter, mutate (dplyr1.Rmd)
-3. More dplyr: group by, summarize, arrange, across (dplyr_group.Rmd)
+1. Introduction to tidyverse (`1_intro_to_tidyverse.qmd`)
+2. Introduction to dplyr: select, filter, mutate (`2_dplyr.qmd`)
+3. More dplyr: group by, summarize, arrange, across (`3_dplyr_group.qmd`)
 
 [How to download these materials](https://sites.northwestern.edu/researchcomputing/resources/downloading-from-github/)
 
