@@ -1,6 +1,4 @@
-# R Intro to Tidyverse 
-
-These materials: https://github.com/nuitrcs/R-intro-tidyverse-2024
+# R Tidyverse Basics
 
 This workshop is being offered in-person in June 2024 by [Northwestern IT Research Computing and Data Services](https://www.it.northwestern.edu/departments/it-services-support/research/).
 
