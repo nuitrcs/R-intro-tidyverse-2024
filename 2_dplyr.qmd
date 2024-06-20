@@ -14,7 +14,7 @@ editor_options:
 knitr::opts_chunk$set(eval=FALSE)  # when making the html version of this file, don't execute the code
 ```
 
-This is an [R Markdown](https://rmarkdown.rstudio.com/) document. Follow the link to learn more about R Markdown and the notebook format used during the workshop.
+This is a [Quarto](https://quarto.org/) document. Follow the link to learn more about Quarto and the notebook format used during the workshop.
 
 # Setup
 
@@ -41,7 +41,7 @@ First, let's remember what the column names are:
 names(police)
 ```
 
-Recall, the `select` function takes as the first input a data frame, and then we can list one or more columns, names unquoted, that we want to select. The columns will be ordered in the order we specify them. Notice that the order in the output is different than the original order above.
+Recall that the `select` function takes as the first input a data frame, and then we can list one or more columns, names unquoted, that we want to select. The columns will be ordered in the order we specify them. Notice that the order in the output is different than the original order above.
 
 ```{r, eval=F}
 police %>% select(outcome, date)
@@ -52,25 +52,25 @@ select(police, outcome, date)
 
 There are a number of select helper functions and special syntax options that allow us to choose multiple columns.
 
-First, we can use : for range, but with names in addition to numbers:
+First, we can use `:` for range, but with names in addition to numbers:
 
 ```{r, eval=F}
 police %>% select(raw_DriverRace:raw_ResultOfStop)
 ```
 
-The result is the same if we use numbers.
+The result is the same if we use numbers:
 
 ```{r, eval=F}
 police %>% select(26:29)
 ```
 
-We can select the rightmost columns with `last_col()`. You can check with `names` that it is the "last" column in our dataset.
+We can select the rightmost columns with `last_col()` (you can check with `names` that it is the "last" column in our dataset):
 
 ```{r, eval=F}
 police %>% select(last_col())
 ```
 
-You can use this to count columns from the right:
+You can use `offset` to count columns from the right:
 
 ```{r}
 select(police, last_col(offset=3))
@@ -97,30 +97,33 @@ Select just the first 6 columns of police.
 We can also say which columns we don't want by putting a `-` (minus) in front of the name. Think about it as subtracting one or more columns. The idea of subtracting makes a lot of sense -- after the command below, we have now 27 rather than the original 29 columns in the data.
 
 ```{r, eval=F}
-police %>% select(-raw_row_number, -subject_age)
+ncol(police)
+ncol(police %>% select(-raw_row_number, -subject_age))
 ```
 
 When using negated `-` column names, if we start with negations and try to mix in columns we want to keep, it will get messy. Make sure to *avoid* the following code:
 
 ```{r, eval=F}
-police %>% select(-raw_row_number, -subject_age, time:outcome) 
+names(police %>% select(-raw_row_number, -subject_age, time:outcome)) 
 ```
+
+Notice that we get many more columns than just those between time and outcome? We even got subject_age! That's not what we wanted.
 
 To both specify the columns wanted and exclude some that would otherwise be selected, the exclusions need to come at the end:
 
 ```{r, eval=F}
-police %>% select(time:outcome, -subject_age) 
+names(police %>% select(time:outcome, -subject_age))
 ```
 
-We don't need to include -raw_row_number -- it is not part of the range between time and outcome. If we do include it, we will still get the same result.
+We don't need to include -raw_row_number because it is not part of the range between time and outcome. If we do include it, we will still get the same result.
 
 ```{r, eval=F}
-police %>% select(time:outcome, -subject_age, -raw_row_number) 
+names(police %>% select(time:outcome, -subject_age, -raw_row_number))
 ```
 
 ### EXERCISE
 
-Drop the last 4 columns from `police` (temporarily - write an expression that will give you police with those columns not included).
+Drop the last 4 columns from `police`. Do it only temporarily - write an expression that will give you police with those columns not included. Don't assign the result back to `police`.
 
 ```{r}
 
@@ -133,28 +136,28 @@ We've already seen that columns will appear in the result in the order that we l
 If we list a column name more than once, it will appear in the first position only (it won't be repeated):
 
 ```{r}
-select(police, date, time, location, date)
+names(select(police, date, time, location, date))
 ```
 
 If you want to pull a few columns over to the left so that they are the ones that show first when you look at the data, the everything() helper function can be useful.
 
 ```{r, eval=F}
-select(police, outcome, everything())
+names(select(police, outcome, everything()))
 ```
 
 We can also rename columns while using `select()`. The syntax is `new_name = old_name`.
 
 ```{r, eval=F}
-police %>% select(raw_id=raw_row_number, date, time)
+names(police %>% select(raw_id=raw_row_number, date, time))
 ```
 
 or we can use `rename()` to only rename, without affecting which columns are included or their order (all of the columns are kept in the same order):
 
 ```{r, eval=F}
-police %>% rename(raw_id=raw_row_number)
+names(police %>% rename(raw_id=raw_row_number))
 ```
 
-Remember, this doesn't change police because we didn't save the result. So far, we've just been printing the copy of the data frame that is returned by the function. If we want to change our data frame, we'd need to save the result back to the `police` object. We can also save the changes in another object with a different name such as `police_new`.
+Remember, this doesn't change police because we didn't save the result. So far, we've just been printing the output that is returned by the function. If we want to change our data frame, we'd need to save the result.
 
 ### EXERCISES
 
@@ -179,21 +182,21 @@ Hint:
 We can also select by matching patterns in the names of the columns. The patterns to match are in quotes because they aren't column names -- just character data.
 
 ```{r, eval=F}
-police %>% select(starts_with("contraband"))
+names(police %>% select(starts_with("contraband")))
 ```
 
 ```{r, eval=F}
-police %>% select(ends_with("issued"))
+names(police %>% select(ends_with("issued")))
 ```
 
 ```{r, eval=F}
-police %>% select(contains("vehicle"))
+names(police %>% select(contains("vehicle")))
 ```
 
 We can also put a `-` in front of these helper functions to exclude columns:
 
 ```{r, eval=F}
-police %>% select(-contains("subject"))
+names(police %>% select(-contains("subject")))
 ```
 
 And there are even more [select helper functions](https://tidyselect.r-lib.org/reference/language.html).
@@ -261,7 +264,6 @@ What if we want to combine multiple select conditions? For example, select colum
 We can use & and \|
 
 ```{r}
-select(police, contains("vehicle"))
 select(police, contains("vehicle") & where(is.character))
 ```
 
@@ -271,7 +273,6 @@ The `filter()` function lets us choose which rows of data to keep by writing exp
 
 ```{r, eval=F}
 police %>%  filter(date == "2017-01-02")
-filter(police, date == "2017-01-02")
 ```
 
 We can do complex conditions as we could do with `[]`
@@ -280,7 +281,7 @@ We can do complex conditions as we could do with `[]`
 police %>% filter(subject_race == "hispanic" & subject_sex == "female")
 ```
 
-If we include multiple comma-separated conditions, they are joined with `&` (and). So this following is equivalent to the above.
+If we include multiple comma-separated conditions, they are joined with `&` (and). So this following is equivalent to the above:
 
 ```{r, eval=F}
 police %>% filter(subject_race == "hispanic", subject_sex == "female")
@@ -337,7 +338,7 @@ Find cars that do not have the median number of cylinders.
 
 ## EXERCISE
 
-Using `police`: find observations that are not moving violations. The violation variable has a few categories. Take a look:
+Using `police`, find observations that are not moving violations. The violation variable has a few categories. Take a look:
 
 ```{r}
 table(police$violation)
@@ -349,7 +350,8 @@ str_detect() is a useful function for this. Example:
 
 ```{r}
 police %>%
-  filter(str_detect(subject_race, "w"))
+  filter(str_detect(subject_race, "w")) %>% 
+  select(violation)
 ```
 
 Now find the stops that are NOT moving violations:
@@ -360,10 +362,9 @@ Now find the stops that are NOT moving violations:
 
 # Bonus: slice variants
 
-Last session, we saw `slice()` briefly as a way to choose which rows we want by their integer index value. But, there are some useful variants on the `slice` function that help us select rows that have the maximum or minimum value of a particular variable:
+Previously, we saw `slice()` briefly as a way to choose which rows we want by their integer index value. But, there are some useful variants on the `slice` function that help us select rows that have the maximum or minimum value of a particular variable:
 
 ```{r, eval=TRUE}
-mtcars %>% slice_max(hp)
 slice_max(mtcars, hp)
 ```
 
@@ -397,12 +398,13 @@ Then, looking only at cars with 4 cylinders, find the 2 with the best mpg values
 
 `mutate()` is used to both change the values of an existing column and make a new column.
 
-We name the column we're mutating and set the value. If the name already exists, it will update the column. If the name doesn't exist, it will create a new variable (column is appended at the end of existing columns).
+We name the column we're mutating and set the value. If the name already exists, it will update the column. If the name doesn't exist, it will create a new variable (column is appended at the end of the existing columns).
 
 ```{r, eval=TRUE}
 police %>% 
   mutate(vehicle_age = 2017 - vehicle_year) %>%
-  select(starts_with("vehicle"))  # just to pick a few columns to look at
+  select(starts_with("vehicle")) %>%   # just to pick a few columns to look at
+  names()
 ```
 
 We can put multiple mutations in the same call to mutate, with the expressions separated by commas:
@@ -433,13 +435,15 @@ Side note: there is a tidyverse version of `ifelse()` called `if_else()` -- with
 
 ```{r, eval=TRUE}
 police %>%
-  mutate(department_id = "EPD")
+  mutate(department_id = "EPD") %>% 
+  select(department_id) %>% 
+  table()
 ```
 
 We didn't save the output, so the column hasn't changed permanently - only in the output.
 
 ```{r}
-police
+police %>% select(department_id) %>% table()
 ```
 
 Remember that when using `mutate()`, you're operating on the entire column at once, so you can't select just a subset of the vector as you would with `[]`. This means more frequently using functions like `ifelse()` or helper functions such as `na_if()`, `replace_na()`, or `recode()`.
@@ -450,7 +454,7 @@ Remember that when using `mutate()`, you're operating on the entire column at on
 police %>% mutate(vehicle_make = na_if(vehicle_make, "UNK"))
 ```
 
-`na_if()` can only can check and replace one value at a time; it also can't be used with any expressions (`x <= 1`) -- only single values.
+`na_if()` can only check and replace one value at a time; it also can't be used with any expressions (`x <= 1`) -- only single values.
 
 ### EXERCISE
 
@@ -459,10 +463,11 @@ If the column beat in `police` is "/" or "CHICAGO", set it to `NA` instead using
 Hint: it's ok if you take two steps to do this.
 
 ```{r}
+
 ```
 
 # Recap
 
 You now can use `select` and `filter` to subset your data in a wide variety of ways, and `mutate` to update variables or create new ones.
 
-Next session: the three other common dplyr "verb" functions for working with data frames: `group_by`, `summarize`, and `arrange`.
+Later: the three other common dplyr "verb" functions for working with data frames: `group_by`, `summarize`, and `arrange`.
