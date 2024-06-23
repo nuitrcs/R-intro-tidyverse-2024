@@ -374,7 +374,8 @@ Using a slice function, get the minimum vehicle year for each vehicle make.
 ```{r}
 police %>% 
   group_by(vehicle_make) %>% 
-  slice_min()
+  slice_min(vehicle_year) %>% 
+  select(vehicle_make, vehicle_age, vehicle_year) # select columns for easy viewing
 ```
 
 # Count
