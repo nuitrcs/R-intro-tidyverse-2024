@@ -155,9 +155,20 @@ select(police, 1, 4, 10)
 
 ### EXERCISE 2: subsetting with select() function
 
-Remember: you need to have loaded tidyverse, and the police data, so execute the cells above.
+For exercises, we will work with the [NHANES](https://www.cdc.gov/nchs/nhanes/index.html) dataset. The National Health and Nutrition Examination Survey (NHANES) collects data about the health of adults and children in the United States. A version of the data can be accessed through the NHANES package on CRAN. Look through the NHANES.pdf file in the data folder to get information about the variables in this data.
 
-Convert this base R expression: `police[,c("violation", "citation_issued", "warning_issued")]` to use `select()` instead to do the same thing:
+```{r}
+# intsall.packages("NHANES")
+library(NHANES)
+
+View(NHANES)
+names(NHANES)
+
+# save under a different variable name
+nhs <- NHANES
+```
+
+Convert this base R expression: `nhs[,c("Weight", "TotChol", "Pulse")]` to use `select()` instead to do the same thing:
 
 ```{r}
 
@@ -187,9 +198,9 @@ filter(police, contraband_found)
 
 ### EXERCISE 3: subsetting with the filter() function
 
-Use `filter()` to choose the rows where subject_race is "white".
+Use `filter()` to choose the rows where Education is "High School".
 
-The equivalent base R expression would be `police[police$subject_race == "white",]`.
+The equivalent base R expression would be `nhs[nhs$Education == "High School",]`.
 
 ```{r}
 
@@ -290,9 +301,9 @@ police %>% .$beat %>% is.na() %>% sum()
 
 ### EXERCISE 4a: combine select() and filter() to subset data
 
-Select the date, time, and outcome (columns) of stops that occur in beat "71" (rows). Make use of the `%>%` operator.
+Select the height, weight, and total cholesterol reading (columns) of subjects who sleep less than 7 hours at night.
 
-The equivalent base R expression would be: `police[police$beat == "71", c("date", "time", "outcome")]`
+The equivalent base R expression would be: `nhs[nhs$SleepHrsNight< 7, c("Height", "Weight", "TotChol")]`
 
 Hint: remember that a column needs to still be in the data frame if you're going to use the column to filter.
 
@@ -305,14 +316,14 @@ Note that so far, we haven't actually changed the `police` data frame at all. We
 Sometimes we may still want to save the result of some expression, such as after performing a bunch of data cleaning steps. We can assign the output of piped commands as we would with any other expression:
 
 ```{r}
-police60201 <- police %>%
-  filter(location == "60201") %>%
-  select(date, time, beat, type, outcome) 
+nhs_lowsleep <- nhs %>%
+  filter(SleepHrsNight < 7) %>%
+  select(Height, Weight, TotChol) 
 ```
 
 ### EXERCISE 4b
 
-Select only vehicle_year and vehicle_make columns for observations where there were contraband_weapons
+Select only TVHrsDay and CompHrsDay columns for observations where there were subjects are Not Working
 
 ```{r}
 

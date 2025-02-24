@@ -23,6 +23,8 @@ This is a [Quarto](https://quarto.org/) document. Follow the link to learn more 
 
 ```{r, eval=TRUE, message=FALSE}
 library(tidyverse)
+library(NHANES)
+nhs <- NHANES
 ```
 
 Now we'll be learning three additional dplyr functions: group_by, summarize, and arrange.
@@ -82,7 +84,7 @@ We get one column per summary variable we create. Once we group below, we'll see
 
 ### EXERCISE
 
-Use summarize to compute the `min()` and `max()` `vehicle_year`
+Use summarize to compute the `min()` and `max()` `AgeFirstMarij`
 
 ```{r}
 
@@ -101,7 +103,7 @@ police %>%
 
 ### EXERCISE
 
-What proportion of vehicles are Toyotas? (vehicle_make "TOYT")
+What proportion of females smoke currently?
 
 ```{r}
 
@@ -230,7 +232,7 @@ There's considerable variation here, from 1.1 warnings for every citation given 
 
 ### EXERCISE
 
-Compute the `min()` and `max()` `vehicle_year` for each `vehicle_make`.
+Compute the `min()` and `max()` `BMI` for each `AgeDecade`.
 
 ```{r}
 
@@ -346,13 +348,13 @@ police %>%
 
 ### EXERCISE
 
-Sort the data by `vehicle_make` and then `vehicle_year`.
+Sort the data by AgeDecade and then TVHrsDay.
 
 ```{r}
 
 ```
 
-Using a slice function, get the minimum vehicle year for each vehicle make.
+Using a slice function, get the minimum TVHrsDay for each AgeDecade.
 
 ```{r}
 
@@ -395,7 +397,7 @@ police %>%
 
 ### EXERCISE
 
-How many times does each type of violation appear in the dataset? Bonus: sort the results from most to least frequent. You can do this with `arrange()` or look at the documentation for `count()` to find another option.
+How many times does each type of MaritalStatus appear in the dataset? Bonus: sort the results from most to least frequent. You can do this with `arrange()` or look at the documentation for `count()` to find another option.
 
 ```{r}
 

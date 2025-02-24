@@ -20,6 +20,8 @@ This is a [Quarto](https://quarto.org/) document. Follow the link to learn more 
 
 ```{r, eval=T}
 library(tidyverse)
+library(NHANES)
+nhs <- NHANES # rename for ease
 ```
 
 The data is from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/) and includes vehicle stops by the Evanston police in 2017. We're reading the data in from a URL directly.
@@ -86,7 +88,7 @@ select(police, last_col()) %>% names()
 
 ### EXERCISE
 
-Select just the first 6 columns of police.
+Select just the first 6 columns of nhs.
 
 ```{r}
 
@@ -123,7 +125,7 @@ names(police %>% select(time:outcome, -subject_age, -raw_row_number))
 
 ### EXERCISE
 
-Drop the last 4 columns from `police`. Do it only temporarily - write an expression that will give you police with those columns not included. Don't assign the result back to `police`.
+Drop the last 4 columns from `nhs`. Do it only temporarily - write an expression that will give you police with those columns not included. Don't assign the result back to `nhs`.
 
 ```{r}
 
@@ -165,8 +167,8 @@ Remember: run the cells above to load tidyverse and import the data.
 
 Using `select` and/or `rename` as needed:
 
--   Rename subject_age to age, subject_race to race, and subject_sex to sex, but keep the columns in their original order
--   Exclude the department_id and department_name columns
+-   Rename `DirectChol` to `HDL_Chol` and `TotChol` to `Total_HDL_Chol`, but keep the columns in their original order
+-   Exclude the `ID` and `SurveyYr` columns
 
 Hint:
 
@@ -203,9 +205,9 @@ And there are even more [select helper functions](https://tidyselect.r-lib.org/r
 
 ### EXERCISE
 
-Use `select()` to get a copy of `police` without the columns that start with "raw".
+Use `select()` to get a copy of `nhs` without the columns that start with "BP".
 
-In other words, drop the columns that start with "raw", except 1) don't permanently change `police` and 2) instead of dropping, we're really selecting what we want to keep instead.
+In other words, drop the columns that start with "BP", except 1) don't permanently change `nhs` and 2) instead of dropping, we're really selecting what we want to keep instead.
 
 ```{r, }
 
@@ -251,7 +253,7 @@ police %>% select(where(is.numeric))
 
 ### EXERCISE
 
-Select columns with logical (TRUE/FALSE) data from police:
+Select columns with numerical data from `nhs`:
 
 ```{r}
 
@@ -289,12 +291,13 @@ police %>% filter(subject_race == "hispanic", subject_sex == "female")
 
 ### EXERCISES
 
-1.  Filter `police` to choose the rows where location is 60201 or 60202
-2.  Filter `police` to choose the rows where location is 60201 or 60202, and subject_sex is "male"
+1.  Filter `nhs` to choose the rows where HealthGen is Excellent or Vgood
+2.  Filter `nhs` to choose the rows where HealthGen is Excellent or Vgood, and AgeDecade is "40-49"
 
 Hints:
 
 -   The "or" operator is `|`; the "and" operator is `&`
+-   Use `levels(nhs$AgeDecade)` to get the names of the categories
 
 ```{r}
 
@@ -324,13 +327,13 @@ mtcars %>% filter(hp == max(hp))
 
 ### EXERCISES
 
-Using `mtcars`, find the car with the minimum (`min()`) displacement (disp) value:
+Using `nhs`, find the subject(s) with the minimum (`min()`) Pulse value, remember to remove or ignore NA values if they are present.
 
 ```{r}
 
 ```
 
-Find cars that do not have the median number of cylinders.
+Find subjects that sleep more than the median number of sleep hours in the data.
 
 ```{r}
 
@@ -338,23 +341,23 @@ Find cars that do not have the median number of cylinders.
 
 ## EXERCISE
 
-Using `police`, find observations that are not moving violations. The violation variable has a few categories. Take a look:
+Using `nhs`, find subjects that don't have the string "College" in the `Education` column.
+
+The `Education` variable has a few categories. Take a look:
 
 ```{r}
-table(police$violation)
+table(nhs$Education)
 ```
 
-Write code to find stops that don't start with "Moving Violation".
-
-str_detect() is a useful function for this. Example:
+Write code to find subjects that do have the string "College" - str_detect() is a useful function for this. Example:
 
 ```{r}
-police %>%
-  filter(str_detect(subject_race, "w")) %>% 
-  select(violation)
+nhs %>%
+  filter(str_detect(Work, "Working")) %>% 
+  select(Poverty)
 ```
 
-Now find the stops that are NOT moving violations:
+Now find the subjects that DON'T have the string "College" in the `Education` column.
 
 ```{r}
 
@@ -458,7 +461,15 @@ police %>% mutate(vehicle_make = na_if(vehicle_make, "UNK"))
 
 ### EXERCISE
 
-If the column beat in `police` is "/" or "CHICAGO", set it to `NA` instead using `mutate()`.
+If the column `HealthGen` in `nhs` is `NA` replace it with `Fair`using `mutate()`.
+
+```{r}
+
+```
+
+### EXERCISE
+
+If the column `PregnantNow` is `Unknown` or `No` set it to `NA` using `mutate()`
 
 Hint: it's ok if you take two steps to do this.
 
