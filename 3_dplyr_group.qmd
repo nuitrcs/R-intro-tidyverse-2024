@@ -34,8 +34,10 @@ Now we'll be learning three additional dplyr functions: group_by, summarize, and
 We're using the same data as before.
 
 ```{r, eval=TRUE}
-police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/data/ev_police.csv",
-                   col_types=c("location"="c"))
+qog <- readr::read_csv(
+  "data/qog_data.csv",
+  col_types = c("br_elect" = "c", "ht_region" = "c", "act_act" = "c")
+  )
 ```
 
 We'll also use the built-in dataset mtcars:
@@ -53,9 +55,9 @@ We use `mutate()` when we want the output to have the same length as the input. 
 When we want to condense multiple values down to a single (or a few values), such as taking the mean or standard deviation of a vector, we use summarize instead:
 
 ```{r}
-police %>% 
-  mutate(vehicle_age = 2017-vehicle_year) %>% # computing a new variable first
-  summarize(mean_vehicle_age = mean(vehicle_age))
+qog %>% 
+  mutate(cckp_rain_cm = cckp_rain / 10) %>% 
+  summarize(mean_cckp_rain = mean(cckp_rain_cm, na.rm = TRUE))
 ```
 
 Note that even though there's just one value, we get a tibble returned. This is what to expect with the tidyverse.
@@ -63,21 +65,22 @@ Note that even though there's just one value, we get a tibble returned. This is 
 As a side note, if we needed the single value (or a single vector), we could `pull()` it out of the tibble/data frame:
 
 ```{r}
-police %>% 
-  mutate(vehicle_age = 2017-vehicle_year) %>% # computing a new variable first
-  summarize(mean_vehicle_age = mean(vehicle_age)) %>%
+qog %>% 
+  mutate(cckp_rain_cm = cckp_rain / 10) %>% 
+  summarize(mean_cckp_rain = mean(cckp_rain_cm, na.rm = TRUE)) %>% 
   pull()
 ```
 
 We can compute more than one summary measure at the same time:
 
 ```{r}
-police %>% 
-  mutate(vehicle_age = 2017-vehicle_year) %>% # computing a new variable first
-  summarize(mean_vehicle_age = mean(vehicle_age),
-            sd_vehicle_age = sd(vehicle_age),
-            min_date = min(date),
-            max_date = max(date))
+qog %>% 
+  mutate(cckp_rain_cm = cckp_rain / 10) %>% 
+  summarize(
+    mean_cckp_rain = mean(cckp_rain_cm, na.rm = TRUE),
+    min_year = min(year),
+    max_year = max(year)
+    )
 ```
 
 We get one column per summary variable we create. Once we group below, we'll see why we get the output in columns instead of rows.
@@ -95,10 +98,13 @@ Use summarize to compute the `min()` and `max()` `AgeFirstMarij`
 A useful helper function with summarize is n() which counts the number of rows. It can be useful in computing proportions.
 
 ```{r}
-police %>%
-  summarize(warnings = sum(outcome == "warning"),  # count the true values
-            total_obs = n(),
-            prop_warnings = warnings/n())
+qog %>% 
+  filter(year == 2015) %>% 
+  summarize(
+    act_act = sum(act_act == 1, na.rm = TRUE), # count the true values
+    total_obs = n(),
+    prop_act_act = act_act / n()
+  )
 ```
 
 ### EXERCISE
@@ -111,39 +117,33 @@ What proportion of females smoke currently?
 
 ## Across
 
-If we want to apply the same summary functions to multiple columns in our data frame, we can write out all of the summary commands explicitly, or we can use `across()` to select which variables to summarize with which functions.
-
-Let's use the `n_distinct()` function to count the number of distinct values in each column (`n_distinct(x)` is the same as `length(unique(x))`. This will help us see which columns don't have useful information because every value is the same.
-
-`across()` selects columns using the helper functions you could give to `select()` directly. We'll use `everything()` here to select all columns.
+If we want to apply the same summary functions to multiple columns in our data frame, we can write out all of the summary commands explicitly, or we can use `across()` to select which variables to summarize with which functions. `across()` selects columns using the helper functions you could give to `select()` directly.
 
 ```{r}
-police %>%
-  summarize(across(everything(), n_distinct))
+na.omit(qog) %>% 
+  summarize(across(where(is.numeric), mean))
 ```
 
 If you wanted to select columns using their names, put them in a vector (so it's a single input argument):
 
 ```{r}
-police %>%
-  summarize(across(c(date, time, location, beat, subject_age), n_distinct))
+na.omit(qog) %>% 
+  summarize(across(c(cckp_rain, cckp_temp), mean))
 
 ```
 
 If we want to apply multiple functions to each column, we put their names in a list() together:
 
 ```{r}
-police %>%
-  summarize(across(!where(is.character), ## select columns that are not of type character
-                   list(min, max)))# take the min and max of each column
+na.omit(qog) %>% 
+  summarize(across(where(is.numeric), list(mean, sd)))
 ```
 
 To fix the names in the output, explicitly name our summary functions in the list:
 
 ```{r}
-police %>%
-  summarize(across(!where(is.character), ## select columns that are not of type character
-                   list(min_val=min, max_val=max)))   # take the min and max of each column
+na.omit(qog) %>% 
+  summarize(across(where(is.numeric), list(avg=mean, std=sd)))
 ```
 
 There are other options for output naming patterns available too.
@@ -171,38 +171,27 @@ With base R, when we want to compute summary measures or do other computation on
 First, what if we just group:
 
 ```{r}
-police %>%
-  group_by(outcome)
+qog %>% 
+  group_by(ht_region)
 ```
 
-When we print this in the console,
+When we print this in the console, we see that it tells us that the tibble (data frame) is grouped by ht_region, and that there are 11 groups. It doesn't rearrange the rows, it just keeps track of the groups for us.
 
-```         
-# A tibble: 14,792 x 29
-# Groups:   outcome [2]
-   raw_row_number date       time  location beat  subject_age subject_race subject_sex department_id
-            <dbl> <date>     <tim>    <dbl> <chr> <lgl>       <chr>        <chr>               <dbl>
- 1       11249746 2017-01-01 00:56    60202 72    NA          white        male                13178
- 2       11249747 2017-01-01 04:43    60643 71    NA          black        male                13178
- 3       11249748 2017-01-01 09:21    60625 78    NA          black        female              13178
-...
-```
-
-we see that it tells us that the tibble (data frame) is grouped by outcome, and that there are two groups. It doesn't rearrange the rows, it just keeps track of the groups for us.
-
-Now, let's combine it with summarize. But first, let's make the `vehicle_age` column we've been using actually part of the `police` dataset so that we don't have to keep creating it:
+Now, let's combine it with summarize. But first, let's make the `cckp_rain_cm` column we've been using actually part of the `qog` dataset so that we don't have to keep creating it:
 
 ```{r, eval=TRUE}
-police <- mutate(police, vehicle_age = 2017-vehicle_year)
+qog <- mutate(qog, cckp_rain_cm = cckp_rain / 10)
 ```
 
 Now, group and summarize:
 
 ```{r}
-police %>% 
-  group_by(subject_sex) %>%
-  summarize(mean_vehicle_age = mean(vehicle_age),
-            sd_vehicle_age = sd(vehicle_age))
+qog %>% 
+  group_by(ht_region) %>% 
+  summarise(
+    mean_wdi_co2 = mean(wdi_co2, na.rm = TRUE),
+    sd_wdi_co2 = sd(wdi_co2, na.rm = TRUE)
+  ) 
 ```
 
 Now we get one row for each group, and one column for each summary measure.
@@ -210,25 +199,13 @@ Now we get one row for each group, and one column for each summary measure.
 We can group by multiple columns, and we'll get all of the combinations of values present across the columns:
 
 ```{r}
-police %>% 
-  group_by(subject_sex, subject_race) %>%
-  summarize(mean_vehicle_age = mean(vehicle_age),
-            sd_vehicle_age = sd(vehicle_age))
+qog %>% 
+  group_by(ht_region, br_elect) %>% 
+  summarise(
+    mean_wdi_co2 = mean(wdi_co2, na.rm = TRUE),
+    sd_wdi_co2 = sd(wdi_co2, na.rm = TRUE)
+  ) 
 ```
-
-We are getting extra information alerting us to the fact that our output is grouped. If we don't want the groups in place anymore, we can ungroup(). Usually this doesn't matter though if we're just printing output to the screen.
-
-Let's compute the ratio of warnings to citations by subject_race - note that we can use the variables we create in later expressions within the same call to `summarize()`:
-
-```{r}
-police %>%
-  group_by(subject_race) %>%
-  summarize(warnings = sum(outcome == "warning"),  # count how many warnings
-            citations = sum(outcome == "citation"), # count how many citations
-            ratio = warnings/citations)
-```
-
-There's considerable variation here, from 1.1 warnings for every citation given to 2.2 warnings for every citation given. So, relatively more warnings to citations for Black drivers than white and Hispanic ones.
 
 ### EXERCISE
 
@@ -257,8 +234,8 @@ Now compute the average value of each variable by \# of cylinders
 If you ever have a grouped data frame, you may need to ungroup it to get rid of the groups. To do so, use `ungroup()`:
 
 ```{r}
-police %>% 
-  group_by(outcome) %>%
+qog %>% 
+  group_by(ht_region) %>%
   ungroup()
 ```
 
@@ -269,81 +246,61 @@ Usually this would come up after more complicated operations, and often after co
 One operation we could do with a grouped tibble is to select just certain rows from each group. For example, we could use the `slice()` function to select the first row from each group:
 
 ```{r}
-police %>%
-  select(outcome, everything()) %>%  # to reorder columns for output
-  group_by(outcome) %>% 
+qog %>% 
+  select(ht_region, everything()) %>% 
+  group_by(ht_region) %>% 
   slice(1)
 ```
 
 If you look at this output in the console, you'll see the resulting tibble still has groups in it. This is a case where you might want to ungroup:
 
 ```{r}
-police %>%
-  select(outcome, everything()) %>%  # to reorder columns for output
-  group_by(outcome) %>%
-  slice(1) %>%
+qog %>% 
+  select(ht_region, everything()) %>% 
+  group_by(ht_region) %>% 
+  slice(1) %>% 
   ungroup()
 ```
 
-Instead of using slice by itself, we're more likely to want to use slice_max or slice_min, or combine slice with sorting the rows in a particular order. Let's see how to do that.
+Instead of using slice by itself, we're more likely to want to use slice_max or slice_min, or combine slice with sorting the rows in a particular order.
 
 # Arrange
 
 Finally, we come to `arrange()`, which is how we sort the rows in our data. We would mostly use this when viewing our data, but it's also useful when we need to compute a time series (lags and leads in the data), when we want to select just a few rows from each group, or any other order-sensitive transformations on our data.
 
 ```{r}
-arrange(police, time)
+arrange(qog, year)
 ```
 
 To sort in reverse order, wrap the column name in `desc()`.
 
 ```{r}
-arrange(police, desc(date))
+arrange(qog, desc(year))
 ```
 
 Arrange by multiple columns, in order:
 
 ```{r}
-arrange(police, date, desc(time))
+arrange(qog, cname_qog, desc(year))
 ```
 
-An example where it matters: compute time between stops in the dataset:
+An example where it matters: change between years.
 
-First, how do we get actual date and times we can work with?
-
-```{r}
-select(police, date, time)
-
-# to combine these in a datetime object that understands dates and times, first paste together
-police %>%
-  mutate(datetime = paste(date, time)) %>%
-  ## check it
-  select(datetime, date, time)
-
-# then convert to an actual datetime object (not just character)
-police %>%
-  mutate(datetime = lubridate::ymd_hms(paste(date, time))) %>%
-  ## check it
-  select(datetime, date, time)
-```
-
-Then, we want to make sure they're in chronological order:
+First, we want to make sure the data are in chronological order:
 
 ```{r}
-police %>%
-  arrange(date, time) %>%
-  mutate(datetime = lubridate::ymd_hms(paste(date, time))) %>%  
-  select(datetime)
+qog %>% 
+  arrange(cname_qog, year)
 ```
 
 Then compute the difference between each value and the previous value. The lag() function helps us do this:
 
 ```{r}
-police %>%
-  arrange(date, time) %>%
-  mutate(datetime = lubridate::ymd_hms(paste(date, time)),  # combine to single value
-         time_since_last = datetime - lag(datetime)) %>%  # current time - previous time
-  select(datetime, time_since_last)
+qog %>% 
+  arrange(cname_qog, year) %>% 
+  mutate(wdi_co2_change = wdi_co2 - lag(wdi_co2)) %>% 
+  select(cname_qog, year, wdi_co2, wdi_co2_change) %>% 
+  View()
 ```
 
 ### EXERCISE
@@ -367,32 +324,30 @@ Count is how you'd get output similar to `table()` - it is used to count rows, e
 By itself, it counts the number of rows ("n" by default):
 
 ```{r}
-police %>%
+qog %>%
   count()
 ```
 
 If you supply the name of a column, it makes a table:
 
 ```{r}
-police %>%
-  count(subject_sex) 
-
-#table(police$subject_sex)
+qog %>%
+  count(ht_region)
 ```
 
 This is the same result as if you grouped the data first:
 
 ```{r}
-police %>%
-  group_by(subject_sex) %>%
+qog %>% 
+  group_by(ht_region) %>% 
   count()
 ```
 
 You can group by multiple columns directly with count:
 
 ```{r}
-police %>%
-  count(subject_sex, subject_race)
+qog %>% 
+  count(ht_region, br_elect)
 ```
 
 ### EXERCISE
@@ -408,5 +363,3 @@ How many times does each type of MaritalStatus appear in the dataset? Bonus: sor
 We've now covered the core dplyr functions: six "verbs" of common actions we may take with a data frame. There are lots of helper functions, variations, and special cases that can come up when using these functions, but we've covered the essentials.
 
 All of these functions were for working with a single data frame. In Intermediate Tidyverse we'll talk about dplyr functions that will help us combine two different data frames together.
-
-To learn more about some issues in computing police bias statistics, see <https://fivethirtyeight.com/features/why-statistics-dont-capture-the-full-extent-of-the-systemic-bias-in-policing/> or from Northwestern researchers Prof. Redbird and Kat Albrecht, <https://redbird.shinyapps.io/police-bias-map/>.
