@@ -58,21 +58,23 @@ Tidyverse packages are particularly useful for:
 
 # Data
 
-Let's import the data we'll be using. The data is from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/) and includes vehicle stops by the Evanston police in 2017. We're reading the data in from a URL directly.
+Let's import the data we'll be using. The data come from the [Quality of Government Institute at the University of Gothenburg](https://www.gu.se/en/quality-government). Most of the data come from the [Environmental Indicators Dataset](https://www.gu.se/en/quality-government/qog-data/data-downloads/environmental-indicators-dataset). The variables `br_elect` and `ht_region` come from the [Standard Dataset](https://www.gu.se/en/quality-government/qog-data/data-downloads/standard-dataset). The datasets were downloaded in January 2025 and processed for this workshop [in this GitHub repo](https://github.com/emiliolehoucq/selecting_data_for_r_bootcamp).
 
 We're going to use the `read_csv` function from the `readr` package, which is part of the tidyverse. The `read_csv` function works like `read.csv` except it has some different defaults, guesses data types a bit differently, and produces a tibble instead of a data frame (details coming).
 
 ```{r, eval=TRUE}
-police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/data/ev_police.csv")
+qog <- read_csv("data/qog_data.csv")
 ```
 
 The output message that you get tells you what data type it guessed for each column based on the format of the information. "chr" is character or text data, "dbl" is numeric (stands for double, which is technical term for a type of number), "lgl" is logical/Boolean (TRUE/FALSE). Note that it also automatically read and identified date and time values and converted them to date and time objects -- not just string/character data.
 
-We can also manually specify column types for cases where the assumption that `read_csv` makes is wrong. We use the `col_types` argument (similar to colClasses for `read.csv`). Let's make the location to be character data, since it is zip codes -- zip codes should not be treated as numbers.
+We can also manually specify column types for cases where the assumption that `read_csv` makes is wrong. We use the `col_types` argument (similar to colClasses for `read.csv`). Let's make `br_elect`, `ht_region`, and `act_act` to be character data -- it doesn't make sense to treat them as numbers.
 
 ```{r, eval=TRUE}
-police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/data/ev_police.csv",
-                   col_types=c("location"="c"))
+qog <- readr::read_csv(
+  "data/qog_data.csv",
+  col_types = c("br_elect" = "c", "ht_region" = "c", "act_act" = "c")
+  )
 ```
 
 ### EXERCISE 1: reading in and formatting data
@@ -95,7 +97,7 @@ Change the code above so that **only** empty strings "" and "N/A" values are imp
 You may have noticed above that `read_csv` imported the data as something called a Tibble. Tibbles are the tidyverse version of a data frame. You can use them as you would a data frame (they are one), but they behave in slightly different ways.
 
 ```{r, eval=TRUE}
-police
+qog
 ```
 
 The most observable difference is that tibbles will only print 10 rows and the columns that will fit in your console. When they print, they print a list of column names and the types of the columns that are shown.
@@ -103,14 +105,14 @@ The most observable difference is that tibbles will only print 10 rows and the c
 To view the dataset, use `View()`:
 
 ```{r}
-View(police)
+View(qog)
 ```
 
 When using \[\] notation to subset them, they will always return a tibble. In contrast, data frames sometimes return a data frame and sometimes return just a vector.
 
 ```{r}
-police[, 1]
-as.data.frame(police)[, 1]
+qog[, 1]
+as.data.frame(qog)[, 1]
 ```
 
 # dplyr
@@ -122,7 +124,7 @@ Here, we're just going to look at the basics of subsetting data to get a feel fo
 Before we start, let's remember what columns are in our data:
 
 ```{r}
-names(police)
+names(qog)
 ```
 
 ## select
@@ -132,25 +134,25 @@ The `select()` function lets us choose which columns (or variables) we want to k
 The data frame is the first input, and the name of the column is the second. We do not have to put quotes around the column name.
 
 ```{r}
-select(police, subject_race)
+select(qog, cname_qog)
 ```
 
 If we want to select additional columns, we can just list the column names as additional inputs, each column name separated by commas:
 
 ```{r}
-select(police, subject_race, outcome)
+select(qog, cname_qog, year)
 ```
 
 As with `[]` indexing, columns will be returned in the order specified:
 
 ```{r}
-select(police, subject_sex, subject_race, date)
+select(qog, year, cname_qog)
 ```
 
 We could also use the column index number if we wanted to instead. We don't need to put the values in `c()` like we would with `[]` (but we could).
 
 ```{r}
-select(police, 1, 4, 10)
+select(qog, 2, 1)
 ```
 
 ### EXERCISE 2: subsetting with select() function
@@ -181,20 +183,16 @@ Hint: The base R expression above keeps all rows but selects only the three colu
 To choose which rows should remain in our data, we use `filter()`. As with `[]`, we write expressions that evaluate to TRUE or FALSE for each row. Like `select()`, we can use the column names without quotes.
 
 ```{r}
-filter(police, location == "60202")
+filter(qog, cname_qog == "United States")
 ```
 
 Note that we use `==` to test for equality and get TRUE/FALSE output. You can also write more complicated expressions -- anything that will evaluate to a vector of TRUE/FALSE values.
 
 ```{r}
-filter(police, is.na(beat))
+filter(qog, is.na(br_elect))
 ```
 
-Variables (columns) that are already logical (TRUE/FALSE values), can be used to filter:
-
-```{r}
-filter(police, contraband_found)
-```
+Note: variables (columns) that are already logical (TRUE/FALSE values), can be used to filter.
 
 ### EXERCISE 3: subsetting with the filter() function
 
@@ -211,17 +209,17 @@ The equivalent base R expression would be `nhs[nhs$Education == "High School",]`
 Unlike `select()`, we can't use row numbers to index which rows we want with filter. This gives an error:
 
 ```{r}
-filter(police, 10)
+filter(qog, 10)
 ```
 
 If we did need to use the row index (row number) to select which rows we want, we can use the `slice()` function.
 
 ```{r}
-slice(police, 10)
+slice(qog, 10)
 ```
 
 ```{r}
-slice(police, 10:15)
+slice(qog, 10:15)
 ```
 
 We don't usually use `slice()` in this way when working with dplyr. This is because we want to be working with well-structured data, where we can reorder the rows without losing information. If reordering the rows in the dataset would result in a loss of information (it would mess up your data), then the dataset is missing an important variable -- maybe just a sequence index. **You should always be able to use a variable to order the data if needed.**
@@ -237,20 +235,20 @@ The pipe works well with dplyr (and other tidyverse packages) because the functi
 We can rewrite
 
 ```{r}
-select(police, date, time)
+select(qog, cname_qog, year)
 ```
 
 as
 
 ```{r}
-police %>% select(date, time)
+qog %>% select(cname_qog, year)
 ```
 
 and you'll often see code formatted, so `%>%` is at the end of each line, and the following line that are still part of the same expression are indented:
 
 ```{r}
-police %>%
-  select(date, time)
+qog %>%
+  select(cname_qog, year)
 ```
 
 The pipe comes from a package called `magrittr`, which has additional special operators in it that you can use. The keyboard shortcut for `%>%` is command-shift-M (Mac) or control-shift-M (Windows).
@@ -258,45 +256,44 @@ The pipe comes from a package called `magrittr`, which has additional special op
 We can use the pipe to string together multiple commands operating on the same data frame:
 
 ```{r}
-police %>%
-  select(subject_race, subject_sex) %>%
-  filter(subject_race == "white")
+qog %>%
+  select(cname_qog, year) %>% 
+  filter(year == 2020)
 ```
 
-We would read the `%>%` in the command above as "then" if reading the code outloud: from police, select subject_race and subject_sex, then filter where subject_race is white.
+We would read the `%>%` in the command above as "then" if reading the code out loud: from `qog`, select `cname_qog` and `year`, then filter `year` is 2020.
 
 This works because the dplyr functions take a tibble/data frame as the first argument (input) and return a tibble/data frame as the output. This makes it easy to pass a data frame through multiple operations, changing it one step at a time.
 
 Order does matter, as the commands are executed in order. So this would give us an error:
 
 ```{r}
-police %>%
-  select(subject_sex, outcome) %>%
-  filter(subject_race == "white")
+qog %>%
+  select(cname_qog, year) %>% 
+  filter(ht_region == "5")
 ```
 
-Because `subject_race` is no longer in the data frame once we try to filter with it. We'd have to reverse the order:
+Because `ht_region` is no longer in the data frame once we try to filter with it. We'd have to reverse the order:
 
 ```{r}
-police %>%
-  filter(subject_race == "white") %>%
-  select(subject_sex, outcome)
+qog %>%
+  filter(ht_region == "5") %>% 
+  select(cname_qog, year)
 ```
 
 You can use the pipe operator to string together commands outside of the tidyverse as well, and it works with any input and output, not just data frames:
 
 ```{r}
-# sum(is.na(police$beat))
-is.na(police$beat) %>% sum()
+is.na(qog$br_elect) %>% sum()
 
 # or
-police$beat %>% is.na() %>% sum()
+qog$br_elect %>%  is.na() %>% sum()
 ```
 
 Advanced aside: it is possible to select parts of a data frame within a piped set of commands (with the %\>% pipe, but not the \|\> pipe). A `.` represents whatever the result of the left of the %\>% is:
 
 ```{r}
-police %>% .$beat %>% is.na() %>% sum()
+qog %>% .$br_elect %>% is.na() %>% sum()
 ```
 
 ### EXERCISE 4a: combine select() and filter() to subset data
