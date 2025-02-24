@@ -24,11 +24,11 @@ library(NHANES)
 nhs <- NHANES # rename for ease
 ```
 
-The data is from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/) and includes vehicle stops by the Evanston police in 2017. We're reading the data in from a URL directly.
-
 ```{r, eval=TRUE}
-police <- read_csv("https://raw.githubusercontent.com/nuitrcs/r-tidyverse/main/data/ev_police.csv",
-                   col_types=c( "location"="c"))
+qog <- readr::read_csv(
+  "data/qog_data.csv",
+  col_types = c("br_elect" = "c", "ht_region" = "c", "act_act" = "c")
+  )
 ```
 
 This file goes into more detail on the select and filter functions we talked about before, and adds in mutate for changing variables or making new ones.
@@ -40,14 +40,14 @@ The previous session covered the basics of `select` but there are many more opti
 First, let's remember what the column names are:
 
 ```{r, eval=F}
-names(police)
+names(qog)
 ```
 
 Recall that the `select` function takes as the first input a data frame, and then we can list one or more columns, names unquoted, that we want to select. The columns will be ordered in the order we specify them. Notice that the order in the output is different than the original order above.
 
 ```{r, eval=F}
-police %>% select(outcome, date)
-select(police, outcome, date)
+qog %>% select(cname_qog, year)
+select(qog, cname_qog, year)
 ```
 
 ## Ranges
@@ -57,33 +57,33 @@ There are a number of select helper functions and special syntax options that al
 First, we can use `:` for range, but with names in addition to numbers:
 
 ```{r, eval=F}
-police %>% select(raw_DriverRace:raw_ResultOfStop)
+qog %>% select(cname_qog:act_act)
 ```
 
 The result is the same if we use numbers:
 
 ```{r, eval=F}
-police %>% select(26:29)
+qog %>% select(1:5)
 ```
 
 We can select the rightmost columns with `last_col()` (you can check with `names` that it is the "last" column in our dataset):
 
 ```{r, eval=F}
-police %>% select(last_col())
+qog %>% select(last_col())
 ```
 
 You can use `offset` to count columns from the right:
 
 ```{r}
-select(police, last_col(offset=3))
+select(qog, last_col(offset=3))
 ```
 
 This is one of the few places R acts like it's counting from 0, that's because it's the number of columns to offset from the end:
 
 ```{r}
 # these are the same
-select(police, last_col(0)) %>% names()
-select(police, last_col()) %>% names()
+select(qog, last_col(0)) %>% names()
+select(qog, last_col()) %>% names()
 ```
 
 ### EXERCISE
@@ -96,31 +96,31 @@ Select just the first 6 columns of nhs.
 
 ## Excluding columns
 
-We can also say which columns we don't want by putting a `-` (minus) in front of the name. Think about it as subtracting one or more columns. The idea of subtracting makes a lot of sense -- after the command below, we have now 27 rather than the original 29 columns in the data.
+We can also say which columns we don't want by putting a `-` (minus) in front of the name. Think about it as subtracting one or more columns.
 
 ```{r, eval=F}
-ncol(police)
-ncol(police %>% select(-raw_row_number, -subject_age))
+ncol(qog)
+ncol(qog %>% select(-epi_cda, -epi_msw, -epi_uwd))
 ```
 
 When using negated `-` column names, if we start with negations and try to mix in columns we want to keep, it will get messy. Make sure to *avoid* the following code:
 
 ```{r, eval=F}
-names(police %>% select(-raw_row_number, -subject_age, time:outcome)) 
+names(qog %>% select(-epi_cda, -epi_msw, -epi_uwd, -year, cname_qog:act_act)) 
 ```
 
-Notice that we get many more columns than just those between time and outcome? We even got subject_age! That's not what we wanted.
+Notice that we get many more columns than just those between cname_qog and act_act? We even got year! That's not what we wanted.
 
 To both specify the columns wanted and exclude some that would otherwise be selected, the exclusions need to come at the end:
 
 ```{r, eval=F}
-names(police %>% select(time:outcome, -subject_age))
+names(qog %>% select(cname_qog:act_act, -epi_cda, -epi_msw, -epi_uwd, -year)) 
 ```
 
-We don't need to include -raw_row_number because it is not part of the range between time and outcome. If we do include it, we will still get the same result.
+We don't need to include -epi_cda, -epi_msw, and -epi_uwd because they are not part of the range between cname_qog and act_act. If we don't include them, we will still get the same result.
 
 ```{r, eval=F}
-names(police %>% select(time:outcome, -subject_age, -raw_row_number))
+names(qog %>% select(cname_qog:act_act, -year)) 
 ```
 
 ### EXERCISE
@@ -138,28 +138,28 @@ We've already seen that columns will appear in the result in the order that we l
 If we list a column name more than once, it will appear in the first position only (it won't be repeated):
 
 ```{r}
-names(select(police, date, time, location, date))
+names(select(qog, year, cname_qog, year, ht_region))
 ```
 
 If you want to pull a few columns over to the left so that they are the ones that show first when you look at the data, the everything() helper function can be useful.
 
 ```{r, eval=F}
-names(select(police, outcome, everything()))
+names(select(qog, epi_cda, epi_msw, epi_uwd, everything()))
 ```
 
 We can also rename columns while using `select()`. The syntax is `new_name = old_name`.
 
 ```{r, eval=F}
-names(police %>% select(raw_id=raw_row_number, date, time))
+names(qog %>% select(country_name=cname_qog, year, ht_region))
 ```
 
 or we can use `rename()` to only rename, without affecting which columns are included or their order (all of the columns are kept in the same order):
 
 ```{r, eval=F}
-names(police %>% rename(raw_id=raw_row_number))
+names(qog %>% rename(country_name=cname_qog))
 ```
 
-Remember, this doesn't change police because we didn't save the result. So far, we've just been printing the output that is returned by the function. If we want to change our data frame, we'd need to save the result.
+Remember, this doesn't change `qog` because we didn't save the result. So far, we've just been printing the output that is returned by the function. If we want to change our data frame, we'd need to save the result.
 
 ### EXERCISES
 
@@ -184,24 +184,10 @@ Hint:
 We can also select by matching patterns in the names of the columns. The patterns to match are in quotes because they aren't column names -- just character data.
 
 ```{r, eval=F}
-names(police %>% select(starts_with("contraband")))
+names(qog %>% select(starts_with("epi_")))
 ```
 
-```{r, eval=F}
-names(police %>% select(ends_with("issued")))
-```
-
-```{r, eval=F}
-names(police %>% select(contains("vehicle")))
-```
-
-We can also put a `-` in front of these helper functions to exclude columns:
-
-```{r, eval=F}
-names(police %>% select(-contains("subject")))
-```
-
-And there are even more [select helper functions](https://tidyselect.r-lib.org/reference/language.html).
+You can also use `ends_with()` and `contains()`. You can also put a `-` in front of these helper functions to exclude columns. And there are even more [select helper functions](https://tidyselect.r-lib.org/reference/language.html).
 
 ### EXERCISE
 
@@ -218,33 +204,33 @@ In other words, drop the columns that start with "BP", except 1) don't permanent
 What if we have the names of the columns we want to select in a vector already? For example:
 
 ```{r, eval=TRUE}
-analysis_vars <- c("search_basis", "reason_for_stop")
+analysis_vars <- c("cckp_rain", "wdi_co2")
 ```
 
 Perhaps we built this vector programatically (we wrote code to determine the values, instead of typing them ourselves), so we can't just rewrite it to:
 
 ```{r, eval=F}
-police %>% select(search_basis, reason_for_stop)
+qog %>% select(cckp_rain, wdi_co2)
 ```
 
-If we just give the vector to `select`, it looks like we expect "analysis_vars" to be a column name in police. We get a warning:
+If we just give the vector to `select`, it looks like we expect "analysis_vars" to be a column name in qog We get a warning:
 
 ```{r}
-police %>% select(analysis_vars)
+qog %>% select(analysis_vars)
 ```
 
 This warning tells us what we should do instead, which is use `all_of`:
 
 ```{r, eval=F}
-police %>% select(all_of(analysis_vars))
+qog %>% select(all_of(analysis_vars))
 ```
 
-This makes it clearer that "analysis_vars" isn't the name of a column in police.
+This makes it clearer that "analysis_vars" isn't the name of a column in qog.
 
 What if we want to select columns of a certain type -- for example, only the numeric columns?
 
 ```{r, eval=F}
-police %>% select(where(is.numeric))
+qog %>% select(where(is.numeric))
 ```
 
 `is.numeric` is the name of a function. We just use the name without `()`. This function is applied to each column, and if it returns TRUE, then the column is selected. Like above with using a vector, we wrap the function we want to use in `where` to make it clear that we're using a function, not looking for a column named "is.numeric").
@@ -261,12 +247,12 @@ Select columns with numerical data from `nhs`:
 
 ## Combining multiple select conditions
 
-What if we want to combine multiple select conditions? For example, select columns from police that contain "vehicle" and are character data?
+What if we want to combine multiple select conditions? For example, select columns from police that contain "cckp" and are numeric data?
 
 We can use & and \|
 
 ```{r}
-select(police, contains("vehicle") & where(is.character))
+select(qog, contains("cckp") & where(is.numeric))
 ```
 
 # Filter: Choose Rows
@@ -274,19 +260,19 @@ select(police, contains("vehicle") & where(is.character))
 The `filter()` function lets us choose which rows of data to keep by writing expressions that return TRUE or FALSE for every row in the data frame. Recall:
 
 ```{r, eval=F}
-police %>%  filter(date == "2017-01-02")
+qog %>%  filter(year == 2020)
 ```
 
 We can do complex conditions as we could do with `[]`
 
 ```{r, eval=F}
-police %>% filter(subject_race == "hispanic" & subject_sex == "female")
+qog %>%  filter(year == 2020 & cname_qog == "United States")
 ```
 
 If we include multiple comma-separated conditions, they are joined with `&` (and). So this following is equivalent to the above:
 
 ```{r, eval=F}
-police %>% filter(subject_race == "hispanic", subject_sex == "female")
+qog %>%  filter(year == 2020, cname_qog == "United States")
 ```
 
 ### EXERCISES
@@ -305,24 +291,28 @@ Hints:
 
 ## Including Variable Transformations
 
-When filtering, we can include transformations of variables in our expressions. To see this, we'll use the built-in `mtcars` dataset.
+When filtering, we can include transformations of variables in our expressions.
 
-Here's what `mtcars` looks like:
+Let's create a new variable for the qog data only for 2015.
 
 ```{r}
-mtcars
+qog_2015 <- filter(qog, year == 2015)
 ```
 
-Now, let's filter to see which cars have above average mpg:
+
+Now, let's filter to see which countries have above average wdi_co2 in 2015:
 
 ```{r, eval=F}
-mtcars %>% filter(mpg > mean(mpg))
+qog_2015 %>% 
+  filter(wdi_co2 > mean(wdi_co2, na.rm = TRUE)) %>% 
+  select(cname_qog)
 ```
 
-Or which car has the most horsepower (hp):
+Or which country has the most wdi_co2 in 2015:
 
 ```{r,  eval=F}
-mtcars %>% filter(hp == max(hp))
+qog_2015 %>% 
+  filter(wdi_co2 == max(wdi_co2, na.rm = TRUE))
 ```
 
 ### EXERCISES
@@ -363,40 +353,6 @@ Now find the subjects that DON'T have the string "College" in the `Education` co
 
 ```
 
-# Bonus: slice variants
-
-Previously, we saw `slice()` briefly as a way to choose which rows we want by their integer index value. But, there are some useful variants on the `slice` function that help us select rows that have the maximum or minimum value of a particular variable:
-
-```{r, eval=TRUE}
-slice_max(mtcars, hp)
-```
-
-By default it just gives us one maximum value (all rows that have that value though), but we can ask for more than one highest value by setting the `n` argument:
-
-```{r, eval=TRUE}
-slice_max(mtcars, hp, n=3)
-```
-
-We got 4 rows above because there was a tie at position 3. There's an option `with_ties` that can change how ties are handled.
-
-There's also a minimum version:
-
-```{r, eval=TRUE}
-slice_min(mtcars, disp)
-```
-
-Like we did with `slice_max`, you can also specify the `n` argument.
-
-## EXERCISE
-
-Find the 2 cars with the best mpg values in mtcars (high values are better).
-
-Then, looking only at cars with 4 cylinders, find the 2 with the best mpg values.
-
-```{r}
-
-```
-
 # Mutate: Change or Create Columns
 
 `mutate()` is used to both change the values of an existing column and make a new column.
@@ -404,32 +360,32 @@ Then, looking only at cars with 4 cylinders, find the 2 with the best mpg values
 We name the column we're mutating and set the value. If the name already exists, it will update the column. If the name doesn't exist, it will create a new variable (column is appended at the end of the existing columns).
 
 ```{r, eval=TRUE}
-police %>% 
-  mutate(vehicle_age = 2017 - vehicle_year) %>%
-  select(starts_with("vehicle")) %>%   # just to pick a few columns to look at
+qog %>% 
+  mutate(cckp_rain_cm = cckp_rain / 10) %>% 
   names()
 ```
 
 We can put multiple mutations in the same call to mutate, with the expressions separated by commas:
 
 ```{r,  eval=TRUE}
-mutate(police, 
-       vehicle_age = 2017 - vehicle_year,
-       old_car = vehicle_year < 2000)
+qog %>% 
+  mutate(
+    cckp_rain_cm = cckp_rain / 10,
+    cckp_temp_fh = (cckp_temp * 9/5) + 32
+    ) %>% 
+  names()
 ```
 
-Within a call to mutate, we can refer to variables we made or changed earlier in the same call as well. Here, we create vehicle_age, and then use it to create vehicle_age_norm:
+Within a call to mutate, we can refer to variables we made or changed earlier in the same call as well:
 
 ```{r, eval=TRUE}
-police %>% 
-  mutate(vehicle_age = 2017 - vehicle_year, 
-         vehicle_age_norm = ifelse(vehicle_age < 0,  # ifelse test condition
-                                   0,  # value if true
-                                   vehicle_age)  # value if false
-         ) %>%  
-  # below is just making it easier for us to see what we changed
-  select(starts_with("vehicle")) %>%
-  filter(vehicle_age < 0)
+qog %>% 
+  mutate(
+    cckp_rain_cm = cckp_rain / 10,
+    cckp_temp_fh = (cckp_temp * 9/5) + 32,
+    hot = ifelse(cckp_temp_fh > 80, TRUE, FALSE)
+    ) %>% 
+  filter(hot)
 ```
 
 Side note: there is a tidyverse version of `ifelse()` called `if_else()` -- with the underscore or low dash symbol -- that works generally the same except it is stricter about checking data types.
@@ -437,27 +393,22 @@ Side note: there is a tidyverse version of `ifelse()` called `if_else()` -- with
 `mutate()` can also change an existing column. It will overwrite it.
 
 ```{r, eval=TRUE}
-police %>%
-  mutate(department_id = "EPD") %>% 
-  select(department_id) %>% 
-  table()
+qog %>% 
+  mutate(cckp_temp = (cckp_temp * 9/5) + 32) %>% 
+  select(cckp_temp) %>%
+  pull() %>% 
+  hist()
 ```
 
 We didn't save the output, so the column hasn't changed permanently - only in the output.
 
 ```{r}
-police %>% select(department_id) %>% table()
+hist(qog$cckp_temp)
 ```
 
 Remember that when using `mutate()`, you're operating on the entire column at once, so you can't select just a subset of the vector as you would with `[]`. This means more frequently using functions like `ifelse()` or helper functions such as `na_if()`, `replace_na()`, or `recode()`.
 
-`na_if` replaces an existing value with `NA`. `replace_na` does roughly the opposite: replaces `NA` with a new value.
-
-```{r}
-police %>% mutate(vehicle_make = na_if(vehicle_make, "UNK"))
-```
-
-`na_if()` can only check and replace one value at a time; it also can't be used with any expressions (`x <= 1`) -- only single values.
+`na_if` replaces an existing value with `NA`. `replace_na` does roughly the opposite: replaces `NA` with a new value. `na_if()` can only check and replace one value at a time; it also can't be used with any expressions (`x <= 1`) -- only single values.
 
 ### EXERCISE
 
